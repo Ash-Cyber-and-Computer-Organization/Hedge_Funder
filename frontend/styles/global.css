@@ -1,1 +1,27 @@
-1
+/* frontend/styles/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bamboo-green: #4A7043;
+  --gold: #D4A017;
+  --gray-900: #1A1A1A;
+}
+
+body {
+  background-color: var(--gray-900);
+  color: white;
+}
+
+.text-gold {
+  color: var(--gold);
+}
+
+.bg-bamboo-green {
+  background-color: var(--bamboo-green);
+}
+
+.bg-gold {
+  background-color: var(--gold);
+}
