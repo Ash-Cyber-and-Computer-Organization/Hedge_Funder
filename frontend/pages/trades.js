@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import ForexChart from '../components/Chart';
+import ForexChart from '../components/Chart.js';
 
 export default function Trades() {
   const [trades, setTrades] = useState([]);
