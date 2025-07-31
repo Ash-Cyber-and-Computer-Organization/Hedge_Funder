@@ -1,5 +1,5 @@
 # Hedge_Funder
-
+text '''
 trading_system/
 ├── backend/
 │   ├── telegram_bot.py       # Telegram signal listener
@@ -22,3 +22,4 @@ trading_system/
 │   ├── database.sqlite       # SQLite database file
 │   └── ...                   # Other data files
 └── README.md                 # Project documentation
+'''
