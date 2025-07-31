@@ -1,58 +1,54 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import ForexChart from '../components/Chart.js';
+import React from "react";
+import Footer from "../components/Footer";
 
-export default function Trades() {
-  const [trades, setTrades] = useState([]);
-
-  useEffect(() => {
-    const fetchTrades = async () => {
-      try {
-        const res = await axios.get('http://your-backend-api/trades');
-        setTrades(res.data);
-      } catch (error) {
-        console.error('Error fetching trades:', error);
-      }
-    };
-    fetchTrades();
-    const interval = setInterval(fetchTrades, 10000); // Update every 10 seconds
-    return () => clearInterval(interval);
-  }, []);
-
+export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold text-gold">Ongoing Trades</h1>
-        <div className="mt-6">
-          <h2 className="text-2xl text-gold">Live Forex Chart (EURUSD)</h2>
-          <ForexChart symbol="EURUSD" />
-        </div>
-        <div className="mt-8">
-          <h2 className="text-2xl text-gold">Active Trades</h2>
-          <table className="w-full mt-4 border-collapse">
-            <thead>
-              <tr className="bg-bamboo-green">
-                <th className="p-2">Symbol</th>
-                <th className="p-2">Action</th>
-                <th className="p-2">Price</th>
-                <th className="p-2">Stop Loss</th>
-                <th className="p-2">Take Profit</th>
-              </tr>
-            </thead>
-            <tbody>
-              {trades.map((trade, index) => (
-                <tr key={index} className="border-b border-gray-700">
-                  <td className="p-2">{trade.symbol}</td>
-                  <td className="p-2">{trade.action}</td>
-                  <td className="p-2">{trade.price}</td>
-                  <td className="p-2">{trade.sl}</td>
-                  <td className="p-2">{trade.tp}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+    <div>
+      <div style={{ backgroundColor: 'green', padding: '10px' }}>
+        <h1 style={{ color: 'gold' }}>Elite Trading</h1>
+        <nav>
+          <a href="/">Dashboard</a>
+          <a href="/trades">Trades</a>
+          <a href="/history">History</a>
+          <a href="/balance">Balance</a>
+        </nav>
       </div>
+
+      <h2 style={{ color: 'gold' }}>Trading Dashboard</h2>
+
+      <div style={{ backgroundColor: 'green', padding: '10px', margin: '10px 0' }}>
+        <h3>Balance</h3>
+        <p>$0.00</p>
+      </div>
+
+      <div style={{ backgroundColor: 'green', padding: '10px', margin: '10px 0' }}>
+        <h3>Equity</h3>
+        <p>$0.00</p>
+      </div>
+
+      <div style={{ backgroundColor: 'green', padding: '10px', margin: '10px 0' }}>
+        <h3>Profit/Loss</h3>
+        <p>$0.00</p>
+      </div>
+
+      <div>
+        <h3 style={{ color: 'gold' }}>Recent Trades</h3>
+        <table>
+          <thead>
+            <tr style={{ backgroundColor: 'green', color: 'white' }}>
+              <th>Symbol</th>
+              <th>Action</th>
+              <th>Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Recent trades rows go here */}
+          </tbody>
+        </table>
+        <a href="/trades">View All Trades</a>
+      </div>
+
+      <Footer />
     </div>
   );
-}
+  }
