@@ -1,5 +1,5 @@
 # Hedge_Funder
-text '''
+bash'''
 trading_system/
 ├── backend/
 │   ├── telegram_bot.py       # Telegram signal listener
