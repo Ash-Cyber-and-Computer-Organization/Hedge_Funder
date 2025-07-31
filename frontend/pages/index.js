@@ -1,68 +1,56 @@
-// frontend/pages/index.js
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import Link from 'next/link';
+import React from "react";
+import Footer from "../components/Footer";
 
 export default function Dashboard() {
-  const [data, setData] = useState({ balance: 0, equity: 0, recentTrades: [] });
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get('http://your-backend-api/balance');
-        setData(res.data);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      }
-    };
-    fetchData();
-    const interval = setInterval(fetchData, 60000); // Update every minute
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold text-gold">Trading Dashboard</h1>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <div className="p-4 bg-bamboo-green rounded-lg shadow-lg">
-            <h2 className="text-xl text-gold">Balance</h2>
-            <p className="text-2xl">${data.balance.toFixed(2)}</p>
-          </div>
-          <div className="p-4 bg-bamboo-green rounded-lg shadow-lg">
-            <h2 className="text-xl text-gold">Equity</h2>
-            <p className="text-2xl">${data.equity.toFixed(2)}</p>
-          </div>
-          <div className="p-4 bg-bamboo-green rounded-lg shadow-lg">
-            <h2 className="text-xl text-gold">Profit/Loss</h2>
-            <p className="text-2xl">${(data.equity - data.balance).toFixed(2)}</p>
-          </div>
-        </div>
-        <div className="mt-8">
-          <h2 className="text-2xl text-gold">Recent Trades</h2>
-          <table className="w-full mt-4 border-collapse">
+    <div className="min-h-screen bg-[#0A0F0D] text-white font-sans">
+      <div className="bg-[#1A2E28] py-6 px-4 shadow-md">
+        <h1 className="text-2xl font-bold text-green-400">Elite Trading</h1>
+        <nav className="mt-2 space-x-4 text-sm text-gray-300">
+          <a href="/" className="hover:text-green-500">Dashboard</a>
+          <a href="/trades" className="hover:text-green-500">Trades</a>
+          <a href="/history" className="hover:text-green-500">History</a>
+          <a href="/balance" className="hover:text-green-500">Balance</a>
+        </nav>
+      </div>
+
+      <main className="p-4 space-y-6">
+        <section className="bg-[#132019] p-4 rounded-xl shadow-lg">
+          <h2 className="text-xl font-semibold text-green-300">Balance</h2>
+          <p className="text-lg mt-1">$0.00</p>
+        </section>
+
+        <section className="bg-[#132019] p-4 rounded-xl shadow-lg">
+          <h2 className="text-xl font-semibold text-green-300">Equity</h2>
+          <p className="text-lg mt-1">$0.00</p>
+        </section>
+
+        <section className="bg-[#132019] p-4 rounded-xl shadow-lg">
+          <h2 className="text-xl font-semibold text-green-300">Profit/Loss</h2>
+          <p className="text-lg mt-1">$0.00</p>
+        </section>
+
+        <section className="bg-[#132019] p-4 rounded-xl shadow-lg">
+          <h2 className="text-xl font-semibold text-green-300 mb-3">Recent Trades</h2>
+          <table className="w-full text-sm">
             <thead>
-              <tr className="bg-bamboo-green">
-                <th className="p-2">Symbol</th>
-                <th className="p-2">Action</th>
-                <th className="p-2">Price</th>
+              <tr className="text-left text-gray-400">
+                <th>Symbol</th>
+                <th>Action</th>
+                <th>Price</th>
               </tr>
             </thead>
             <tbody>
-              {data.recentTrades.map((trade, index) => (
-                <tr key={index} className="border-b border-gray-700">
-                  <td className="p-2">{trade.symbol}</td>
-                  <td className="p-2">{trade.action}</td>
-                  <td className="p-2">{trade.price}</td>
-                </tr>
-              ))}
+              <tr className="text-white">
+                <td colSpan="3" className="py-2">No recent trades available.</td>
+              </tr>
             </tbody>
           </table>
-          <Link href="/trades">
-            <a className="mt-4 inline-block bg-gold text-gray-900 px-4 py-2 rounded">View All Trades</a>
-          </Link>
-        </div>
-      </div>
+          <a href="/trades" className="text-sm text-green-400 hover:underline mt-2 block">View All Trades</a>
+        </section>
+      </main>
+
+      <Footer />
     </div>
   );
 }
