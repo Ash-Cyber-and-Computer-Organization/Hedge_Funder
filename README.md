@@ -2,7 +2,7 @@
 
 <pre>
 ```text
-trading_system/
+Hedge_Funder/
 ├── backend/
 │   ├── telegram_bot.py       # Telegram signal listener
 │   ├── web_scraper.py        # News scraper and sentiment analyzer
