@@ -1,4 +1,3 @@
-// frontend/pages/trades.js
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import ForexChart from '../components/Chart';
