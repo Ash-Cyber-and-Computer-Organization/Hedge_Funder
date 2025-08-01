@@ -1,7 +1,7 @@
 
----
-
 # Hedge_Funder
+
+___
 
 Hedge_Funder is an automated trading and sentiment analysis platform, combining a Telegram signal listener, news sentiment scraper, and trade executor for MetaTrader 5. The project includes both backend (Python) and frontend (Next.js/React) components, with supporting scripts and database storage.
 
