@@ -84,12 +84,12 @@ Contributions are welcome! Please open issues or pull requests for improvements.
 
 ## License
 
-Specify your license here (MIT, GPL, etc.).
+MIT License 
 
 ## Contact
 
 For questions, contact the maintainers via GitHub issues.
+@ ContractorX
+@ Moh dakai
 
 ---
-
-Let me know if you want to customize sections for usage, API documentation, or deployment details!
