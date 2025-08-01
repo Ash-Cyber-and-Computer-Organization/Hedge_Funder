@@ -1,4 +1,3 @@
-Here’s a professional README example for your Hedge_Funder project. You can copy, enhance, or replace your current README.md with this:
 
 ---
 
