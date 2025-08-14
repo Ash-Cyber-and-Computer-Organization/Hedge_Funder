@@ -1,54 +1,44 @@
 import React from "react";
-import Footer from "../components/Footer";
+import ModernLayout from "../components/ModernLayout";
 
-export default function Dashboard() {
+export default function Trades() {
   return (
-    <div>
-      <div style={{ backgroundColor: 'green', padding: '10px' }}>
-        <h1 style={{ color: 'gold' }}>Elite Trading</h1>
-        <nav>
-          <a href="/">Dashboard</a>
-          <a href="/trades">Trades</a>
-          <a href="/history">History</a>
-          <a href="/balance">Balance</a>
-        </nav>
+    <ModernLayout>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold text-white">Trading Dashboard</h1>
+
+        <div className="bg-dark-800/50 backdrop-blur-sm rounded-xl p-6 border border-dark-700">
+          <h3 className="text-lg font-semibold text-white">Balance</h3>
+          <p className="text-2xl font-bold text-primary-400">$0.00</p>
+        </div>
+
+        <div className="bg-dark-800/50 backdrop-blur-sm rounded-xl p-6 border border-dark-700">
+          <h3 className="text-lg font-semibold text-white">Equity</h3>
+          <p className="text-2xl font-bold text-primary-400">$0.00</p>
+        </div>
+
+        <div className="bg-dark-800/50 backdrop-blur-sm rounded-xl p-6 border border-dark-700">
+          <h3 className="text-lg font-semibold text-white">Profit/Loss</h3>
+          <p className="text-2xl font-bold text-primary-400">$0.00</p>
+        </div>
+
+        <div className="bg-dark-800/50 backdrop-blur-sm rounded-xl p-6 border border-dark-700">
+          <h3 className="text-lg font-semibold text-white">Recent Trades</h3>
+          <table className="min-w-full">
+            <thead>
+              <tr className="bg-dark-700 text-white">
+                <th className="px-4 py-2">Symbol</th>
+                <th className="px-4 py-2">Action</th>
+                <th className="px-4 py-2">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* Recent trades rows go here */}
+            </tbody>
+          </table>
+          <Link href="/trades" className="text-primary-400 hover:underline">View All Trades</Link>
+        </div>
       </div>
-
-      <h2 style={{ color: 'gold' }}>Trading Dashboard</h2>
-
-      <div style={{ backgroundColor: 'green', padding: '10px', margin: '10px 0' }}>
-        <h3>Balance</h3>
-        <p>$0.00</p>
-      </div>
-
-      <div style={{ backgroundColor: 'green', padding: '10px', margin: '10px 0' }}>
-        <h3>Equity</h3>
-        <p>$0.00</p>
-      </div>
-
-      <div style={{ backgroundColor: 'green', padding: '10px', margin: '10px 0' }}>
-        <h3>Profit/Loss</h3>
-        <p>$0.00</p>
-      </div>
-
-      <div>
-        <h3 style={{ color: 'gold' }}>Recent Trades</h3>
-        <table>
-          <thead>
-            <tr style={{ backgroundColor: 'green', color: 'white' }}>
-              <th>Symbol</th>
-              <th>Action</th>
-              <th>Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Recent trades rows go here */}
-          </tbody>
-        </table>
-        <a href="/trades">View All Trades</a>
-      </div>
-
-      <Footer />
-    </div>
+    </ModernLayout>
   );
-  }
+}
