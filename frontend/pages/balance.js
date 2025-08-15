@@ -1,16 +1,19 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { DollarSign } from "lucide-react";
+import ModernLayout from "../components/ModernLayout";
 
 const Balance = () => {
   return (
-    <Card className="rounded-2xl shadow-lg p-4 flex items-center gap-4">
-      <DollarSign className="w-10 h-10 text-green-600" />
-      <CardContent className="p-0">
-        <p className="text-sm text-muted-foreground">Available Balance</p>
-        <h1 className="text-3xl font-bold text-foreground">$12,420.75</h1>
-      </CardContent>
-    </Card>
+    <ModernLayout>
+      <div className="bg-dark-800/50 backdrop-blur-sm rounded-xl p-6 border border-dark-700 flex items-center gap-4">
+        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary-500 text-white text-2xl font-bold">
+          $
+        </div>
+        <div>
+          <p className="text-sm text-gray-400">Available Balance</p>
+          <h1 className="text-3xl font-bold text-white">$12,420.75</h1>
+        </div>
+      </div>
+    </ModernLayout>
   );
 };
 
