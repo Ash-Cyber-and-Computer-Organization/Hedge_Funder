@@ -32,7 +32,7 @@ Hedge_Funder/
 └── README.md                 # Project documentation
 ```
 <!-- Need to change directory's index
-- we added new features like
+- we added new features like package.json
 -->
 ## Features
 
