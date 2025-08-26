@@ -31,7 +31,9 @@ Hedge_Funder/
 │   └── ...                   # Other data files
 └── README.md                 # Project documentation
 ```
-<!-- Need to change directory's index-->
+<!-- Need to change directory's index
+- we added new features like
+-->
 ## Features
 
 - **Telegram Signal Listener**: Connects to Telegram channels and parses trading signals.
