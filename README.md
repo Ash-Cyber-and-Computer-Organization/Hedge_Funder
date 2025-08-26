@@ -34,6 +34,7 @@ Hedge_Funder/
 <!-- Need to change directory's index
 - we added new features like package.json
 - vercel.json
+- package.lock.json
 -->
 ## Features
 
