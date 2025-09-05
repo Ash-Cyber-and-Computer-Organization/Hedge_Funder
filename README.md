@@ -31,7 +31,11 @@ Hedge_Funder/
 │   └── ...                   # Other data files
 └── README.md                 # Project documentation
 ```
-
+<!-- Need to change directory's index
+- we added new features like package.json
+- vercel.json
+- package.lock.json
+-->
 ## Features
 
 - **Telegram Signal Listener**: Connects to Telegram channels and parses trading signals.
