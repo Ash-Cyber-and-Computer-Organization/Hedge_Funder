@@ -92,8 +92,11 @@ export default function TradingPlatformLandingPage() {
                 Mobile App
               </a>
             </nav>
-            <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-full font-semibold transition-colors">Sign Up</button>
-          </div>
+            <SignUpButton mode="modal">
+              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg">
+              Sign Up
+              </button>
+            </SignUpButton>
         </div>
       </header>
       
