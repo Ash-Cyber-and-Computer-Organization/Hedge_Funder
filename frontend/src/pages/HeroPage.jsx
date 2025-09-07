@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Facebook, Twitter, Instagram, Youtube, TrendingUp, Shield, Bot } from "lucide-react"
-
+import { SignUpButton } from "@clerk/clerk-react"   // ✅ added import
 export default function TradingPlatformLandingPage() {
   const [cryptoData, setCryptoData] = useState([]);
   const [loading, setLoading] = useState(true);
