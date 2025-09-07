@@ -111,9 +111,11 @@ export default function TradingPlatformLandingPage() {
                 Join the ranks of elite traders using cutting-edge AI technology and advanced market analytics. Our platform delivers institutional-grade trading tools designed for both beginners and professionals seeking superior returns in the cryptocurrency markets.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors">
+              <SignInButton mode="modal">  
+                 <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors">
                   Start Trading Now
                 </button>
+              </SignInButton>
                 <button
                   variant="outline"
                   className="border border-purple-500 text-purple-500 hover:bg-purple-900/20 px-8 py-3 rounded-full text-lg bg-transparent font-semibold transition-colors"
