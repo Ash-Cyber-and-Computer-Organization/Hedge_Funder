@@ -93,16 +93,7 @@ export default function TradingPlatformLandingPage() {
                 Mobile App
               </a>
             </nav>
-            <div>
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-full font-semibold transition-colors">Sign Up</button>
-                </SignInButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
-            </div>
+            <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-full font-semibold transition-colors">Sign Up</button>
           </div>
         </div>
       </header>
@@ -119,18 +110,9 @@ export default function TradingPlatformLandingPage() {
                 Join the ranks of elite traders using cutting-edge AI technology and advanced market analytics. Our platform delivers institutional-grade trading tools designed for both beginners and professionals seeking superior returns in the cryptocurrency markets.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <SignedOut>
-                  <SignInButton mode="modal">
-                    <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors">
-                      Sign Up
-                    </button>
-                  </SignInButton>
-                </SignedOut>
-                <SignedIn>
-                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors">
-                    Go to Dashboard
-                  </button>
-                </SignedIn>
+                <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors">
+                  Start Trading Now
+                </button>
                 <button
                   variant="outline"
                   className="border border-purple-500 text-purple-500 hover:bg-purple-900/20 px-8 py-3 rounded-full text-lg bg-transparent font-semibold transition-colors"
