@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Facebook, Twitter, Instagram, Youtube, TrendingUp, Shield, Bot } from "lucide-react"
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react"
 
 export default function TradingPlatformLandingPage() {
   const [cryptoData, setCryptoData] = useState([]);
@@ -92,7 +93,16 @@ export default function TradingPlatformLandingPage() {
                 Mobile App
               </a>
             </nav>
-            <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-full font-semibold transition-colors">Sign Up</button>
+            <div>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-full font-semibold transition-colors">Sign Up</button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
+            </div>
           </div>
         </div>
       </header>
@@ -109,9 +119,18 @@ export default function TradingPlatformLandingPage() {
                 Join the ranks of elite traders using cutting-edge AI technology and advanced market analytics. Our platform delivers institutional-grade trading tools designed for both beginners and professionals seeking superior returns in the cryptocurrency markets.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors">
-                  Start Trading Now
-                </button>
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors">
+                      Sign Up
+                    </button>
+                  </SignInButton>
+                </SignedOut>
+                <SignedIn>
+                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors">
+                    Go to Dashboard
+                  </button>
+                </SignedIn>
                 <button
                   variant="outline"
                   className="border border-purple-500 text-purple-500 hover:bg-purple-900/20 px-8 py-3 rounded-full text-lg bg-transparent font-semibold transition-colors"
@@ -181,9 +200,18 @@ export default function TradingPlatformLandingPage() {
                   <span className="text-gray-300">✓ Free $100,000 demo account</span>
                 </div>
               </div>
-              <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full font-semibold transition-colors">
-                Get Started Free
-              </button>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full font-semibold transition-colors">
+                    Sign Up
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full font-semibold transition-colors">
+                  Go to Dashboard
+                </button>
+              </SignedIn>
             </motion.div>
           </div>
         </div>
@@ -311,7 +339,16 @@ export default function TradingPlatformLandingPage() {
               <p className="text-lg text-gray-400 mb-8">
                 Join thousands of successful traders who trust Elite Trader for their cryptocurrency investments. Our proven track record, cutting-edge technology, and commitment to security make us the preferred choice for both novice and experienced traders looking to maximize their returns in the digital asset space.
               </p>
-              <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full font-semibold transition-colors">Create Account</button>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full font-semibold transition-colors">Sign Up</button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full font-semibold transition-colors">
+                  Go to Dashboard
+                </button>
+              </SignedIn>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 50 }}
