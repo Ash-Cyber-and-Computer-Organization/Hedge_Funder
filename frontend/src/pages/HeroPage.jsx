@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Facebook, Twitter, Instagram, Youtube, TrendingUp, Shield, Bot } from "lucide-react"
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react"
+import { Link } from "react-router-dom"
 
 export default function TradingPlatformLandingPage() {
   const [cryptoData, setCryptoData] = useState([]);
@@ -121,9 +122,11 @@ export default function TradingPlatformLandingPage() {
                   </SignInButton>
                 </SignedOut>
                 <SignedIn>
-                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors">
-                    Go to Dashboard
-                  </button>
+                  <Link to="/dashboard">
+                    <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors">
+                      Go to Dashboard
+                    </button>
+                  </Link>
                 </SignedIn>
                 <button
                   variant="outline"
@@ -200,9 +203,11 @@ export default function TradingPlatformLandingPage() {
                 </SignInButton>
               </SignedOut>
               <SignedIn>
-                <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full font-semibold transition-colors">
-                  Go to Dashboard
-                </button>
+                <Link to="/dashboard">
+                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full font-semibold transition-colors">
+                    Go to Dashboard
+                  </button>
+                </Link>
               </SignedIn>
             </motion.div>
           </div>

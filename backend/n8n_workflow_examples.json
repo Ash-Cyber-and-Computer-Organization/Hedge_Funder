@@ -1,0 +1,233 @@
+{
+  "n8n_workflow_templates": {
+    "news_signal_workflow": {
+      "name": "News Analysis & Signal Generation",
+      "description": "Automated workflow to analyze news and generate trading signals",
+      "nodes": [
+        {
+          "name": "Schedule Trigger",
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "field": "minutes",
+                  "amount": 15
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "HTTP Request - Generate Signals",
+          "type": "n8n-nodes-base.httpRequest",
+          "parameters": {
+            "url": "http://localhost:5001/api/signals/generate",
+            "method": "POST",
+            "sendBody": true,
+            "bodyContentType": "json",
+            "bodyParameters": {
+              "parameter": [
+                {
+                  "name": "symbols",
+                  "value": "[\"AAPL\", \"GOOGL\", \"MSFT\", \"TSLA\", \"NVDA\"]",
+                  "parameterType": "string"
+                },
+                {
+                  "name": "days_back",
+                  "value": "3",
+                  "parameterType": "number"
+                }
+              ]
+            },
+            "headerParameters": {
+              "parameter": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Function - Process Signals",
+          "type": "n8n-nodes-base.function",
+          "parameters": {
+            "functionCode": "const signals = $node[\"HTTP Request - Generate Signals\"].json.signals;\n\n// Filter signals with high confidence\nlet validSignals = signals.filter(signal => signal.confidence > 0.6 && signal.risk_validated);\n\n// Format for Telegram\nlet message = '🚀 **Trading Signals Generated**\\n\\n';\n\nif (validSignals.length > 0) {\n  validSignals.forEach(signal => {\n    message += `📊 **${signal.symbol}**: ${signal.signal}\\n`;\n    message += `🎯 Confidence: ${(signal.confidence * 100).toFixed(1)}%\\n`;\n    message += `📝 Reason: ${signal.reason}\\n\\n`;\n  });\n} else {\n  message += '⚠️ No high-confidence signals found\\n';\n}\n\nreturn [{ json: { message, signals: validSignals } }];"
+          }
+        },
+        {
+          "name": "Telegram - Send Alert",
+          "type": "n8n-nodes-base.telegram",
+          "parameters": {
+            "resource": "message",
+            "chatId": "{{$node[\"Telegram Credentials\"].parameter.chatId}}",
+            "text": "{{$node[\"Function - Process Signals\"].json.message}}"
+          }
+        }
+      ]
+    },
+    "risk_monitoring_workflow": {
+      "name": "Risk Monitoring & Alerts",
+      "description": "Monitor trading performance and send risk alerts",
+      "nodes": [
+        {
+          "name": "Schedule Trigger",
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "field": "minutes",
+                  "amount": 5
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "HTTP Request - Get Dashboard",
+          "type": "n8n-nodes-base.httpRequest",
+          "parameters": {
+            "url": "http://localhost:5001/api/monitoring/dashboard",
+            "method": "GET",
+            "headerParameters": {
+              "parameter": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Function - Check Risk",
+          "type": "n8n-nodes-base.function",
+          "parameters": {
+            "functionCode": "const data = $node[\"HTTP Request - Get Dashboard\"].json;\nconst riskMetrics = data.risk_metrics;\nconst performance = data.performance;\n\nlet alerts = [];\n\n// Check daily loss limit\nif (performance.daily_pnl < -riskMetrics.max_daily_loss * 0.8) {\n  alerts.push({\n    type: 'CRITICAL',\n    message: `🚨 **CRITICAL: Daily Loss Alert**\\nCurrent P&L: $${performance.daily_pnl}\\nLimit: $${riskMetrics.max_daily_loss}`\n  });\n}\n\n// Check position limits\nif (riskMetrics.current_positions >= riskMetrics.max_position_size * 10) {\n  alerts.push({\n    type: 'WARNING',\n    message: `⚠️ **Position Limit Warning**\\nCurrent Positions: ${riskMetrics.current_positions}\\nMax Allowed: ${riskMetrics.max_position_size * 10}`\n  });\n}\n\n// System status check\nif (!data.system_status.mt5_connection) {\n  alerts.push({\n    type: 'ERROR',\n    message: '🔴 **MT5 Connection Lost**\\nPlease check MT5 terminal connection'\n  });\n}\n\nreturn [{ json: { alerts, data } }];"
+          }
+        },
+        {
+          "name": "Split In Batches",
+          "type": "n8n-nodes-base.splitInBatches",
+          "parameters": {
+            "batchSize": 1,
+            "options": {}
+          }
+        },
+        {
+          "name": "Telegram - Send Risk Alert",
+          "type": "n8n-nodes-base.telegram",
+          "parameters": {
+            "resource": "message",
+            "chatId": "{{$node[\"Telegram Credentials\"].parameter.chatId}}",
+            "text": "{{$node[\"Split In Batches\"].json.alerts[0].message}}"
+          }
+        }
+      ]
+    },
+    "market_sentiment_workflow": {
+      "name": "Market Sentiment Analysis",
+      "description": "Analyze overall market sentiment from major indices",
+      "nodes": [
+        {
+          "name": "Schedule Trigger",
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "field": "hours",
+                  "amount": 2
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "HTTP Request - Analyze Market",
+          "type": "n8n-nodes-base.httpRequest",
+          "parameters": {
+            "url": "http://localhost:5001/api/news/analyze",
+            "method": "POST",
+            "sendBody": true,
+            "bodyContentType": "json",
+            "bodyParameters": {
+              "parameter": [
+                {
+                  "name": "symbol",
+                  "value": "^GSPC",
+                  "parameterType": "string"
+                },
+                {
+                  "name": "days_back",
+                  "value": "1",
+                  "parameterType": "number"
+                }
+              ]
+            },
+            "headerParameters": {
+              "parameter": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Function - Format Sentiment",
+          "type": "n8n-nodes-base.function",
+          "parameters": {
+            "functionCode": "const analysis = $node[\"HTTP Request - Analyze Market\"].json;\n\nif (!analysis || analysis.error) {\n  return [{ json: { message: '❌ Market sentiment analysis failed', sentiment: 'UNKNOWN' } }];\n}\n\nconst sentiment = analysis.sentiment_data.overall_score;\nconst articleCount = analysis.sentiment_data.article_count;\n\nlet sentimentEmoji = '😐';\nlet sentimentText = 'NEUTRAL';\n\nif (sentiment > 0.2) {\n  sentimentEmoji = '📈';\n  sentimentText = 'BULLISH';\n} else if (sentiment < -0.2) {\n  sentimentEmoji = '📉';\n  sentimentText = 'BEARISH';\n}\n\nlet message = `${sentimentEmoji} **Market Sentiment Update**\\n\\n`;\nmessage += `📊 **S&P 500 Sentiment**: ${sentimentText}\\n`;\nmessage += `🎯 **Score**: ${(sentiment * 100).toFixed(1)}%\\n`;\nmessage += `📰 **Articles Analyzed**: ${articleCount}\\n`;\nmessage += `⏰ **Analysis Time**: ${new Date().toLocaleString()}`;\n\nreturn [{ json: { message, sentiment: sentimentText, score: sentiment } }];"
+          }
+        },
+        {
+          "name": "Telegram - Send Sentiment Update",
+          "type": "n8n-nodes-base.telegram",
+          "parameters": {
+            "resource": "message",
+            "chatId": "{{$node[\"Telegram Credentials\"].parameter.chatId}}",
+            "text": "{{$node[\"Function - Format Sentiment\"].json.message}}"
+          }
+        }
+      ]
+    }
+  },
+  "production_endpoints": {
+    "description": "Replace localhost URLs with your Vercel deployment URL",
+    "replacements": {
+      "http://localhost:5001": "https://your-vercel-app.vercel.app"
+    },
+    "example_workflow_update": {
+      "from": "http://localhost:5001/api/signals/generate",
+      "to": "https://your-vercel-app.vercel.app/api/signals/generate"
+    }
+  },
+  "setup_instructions": {
+    "n8n_ui_setup": [
+      "1. Start N8N: n8n start",
+      "2. Open http://localhost:5678",
+      "3. Create new workflow",
+      "4. Add nodes as shown in templates above",
+      "5. Configure Telegram credentials",
+      "6. Test workflow manually first",
+      "7. Enable schedule triggers"
+    ],
+    "environment_switching": [
+      "For production: Replace all localhost URLs with Vercel URL",
+      "Update API keys and credentials",
+      "Test all endpoints before going live",
+      "Monitor logs for any connection issues"
+    ],
+    "troubleshooting": [
+      "Check Flask API logs for errors",
+      "Verify CORS settings if requests fail",
+      "Test endpoints manually with curl first",
+      "Ensure N8N has internet access for external APIs"
+    ]
+  }
+}
