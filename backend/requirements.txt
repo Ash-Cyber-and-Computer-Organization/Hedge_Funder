@@ -1,2 +1,8 @@
 MetaTrader5==5.0.45
 python-dotenv==1.0.0
+yfinance==0.2.40
+requests==2.31.0
+pandas==2.1.4
+numpy==1.24.3
+textblob==0.17.1
+vaderSentiment==3.3.2
