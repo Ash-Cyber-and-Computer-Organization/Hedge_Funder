@@ -305,6 +305,14 @@ const TradingDashboard = () => {
               <div className="text-2xl mb-2">⚡</div>
               <div>Execute Workflow</div>
             </button>
+            <a
+              href="https://ash1industries.app.n8n.cloud"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 block text-blue-400 underline"
+            >
+              View N8N Workflow Dashboard
+            </a>
           </div>
         </div>
       </div>
