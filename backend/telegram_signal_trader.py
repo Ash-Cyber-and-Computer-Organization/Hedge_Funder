@@ -1,9 +1,14 @@
-import MetaTrader5 as mt5
+#!/usr/bin/env python3
+"""
+Telegram Signal Trader
+Processes trading signals received via Telegram and executes trades
+"""
+
 import os
 import logging
-import sys
 from datetime import datetime
 from dotenv import load_dotenv
+import MetaTrader5 as mt5
 
 # Load environment variables
 load_dotenv()
@@ -11,212 +16,226 @@ load_dotenv()
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('trading_bot.log'),
-        logging.StreamHandler(sys.stdout)
-    ]
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# MetaTrader 5 Connection Settings (from .env file)
-login = int(os.getenv("MT5_LOGIN", "5033134663"))  # Replace with your MT5 login
-password = os.getenv("MT5_PASSWORD", "Ap*i6aAs")  # Replace with your MT5 password
-server = os.getenv("MT5_SERVER", "MetaQuotes-Demo")  # Replace with your MT5 server
+class TelegramSignalTrader:
+    """Processes trading signals and executes trades via MT5"""
 
-FIXED_LOT_SIZE = float(os.getenv("FIXED_LOT_SIZE", "0.2"))  # set lot size (e.g 0.2)
-MAX_DAILY_TRADES = int(os.getenv("MAX_DAILY_TRADES", "10"))  # Set Maximum Trades
+    def __init__(self):
+        self.mt5_login = int(os.getenv('MT5_LOGIN', 0))
+        self.mt5_password = os.getenv('MT5_PASSWORD')
+        self.mt5_server = os.getenv('MT5_SERVER')
+        self.connected = False
 
-trade_count = 0  # Counter for daily trades
+        # Connect to MT5
+        self.connect_mt5()
 
-def process_signal(signal):
-    """Process incoming trading signals."""
-    global trade_count
+    def connect_mt5(self):
+        """Connect to MetaTrader 5 terminal"""
+        if not mt5.initialize():
+            logger.error("MT5 initialization failed")
+            return False
 
-    logger.info(f"Received signal: {signal}")
-
-    if trade_count >= MAX_DAILY_TRADES:
-        logger.warning(f"Daily trade limit reached. Current count: {trade_count}/{MAX_DAILY_TRADES}")
-        return
-
-    try:
-        parts = signal.split()
-        if len(parts) < 4:
-            logger.error(f"Invalid signal format. Expected at least 4 parts, got {len(parts)}")
-            return
-
-        action = parts[0].upper()
-        symbol = parts[1]
-        sl = float(parts[2].split('=')[1])
-        tp = float(parts[3].split('=')[1])
-
-        logger.info(f"Parsed Signal: Action={action}, Symbol={symbol}, SL={sl}, TP={tp}")
-
-        if action not in ["BUY", "SELL"]:
-            logger.error(f"Invalid action '{action}'. Must be 'BUY' or 'SELL'")
-            return
-
-        success = place_trade(action, symbol, sl, tp)
-        if success:
-            trade_count += 1
-            logger.info(f"Trade processed successfully. Daily count: {trade_count}/{MAX_DAILY_TRADES}")
+        if self.mt5_login and self.mt5_password and self.mt5_server:
+            authorized = mt5.login(self.mt5_login, self.mt5_password, self.mt5_server)
+            if authorized:
+                logger.info("MT5 connection successful")
+                self.connected = True
+                return True
+            else:
+                logger.error("MT5 login failed")
+                return False
         else:
-            logger.error("Trade placement failed")
-
-    except ValueError as e:
-        logger.error(f"Error parsing signal values: {e}")
-    except Exception as e:
-        logger.error(f"Error processing signal: {e}")
-
-def place_trade(action, symbol, sl, tp):
-    """Place a trade in MetaTrader 5."""
-    logger.info(f"Placing trade: Action={action}, Symbol={symbol}, SL={sl}, TP={tp}")
-
-    try:
-        # Initialize MT5 connection
-        if not mt5.initialize(login=login, password=password, server=server):
-            error_code, description = mt5.last_error()
-            logger.error(f"Failed to initialize MT5: {error_code}, {description}")
+            logger.warning("MT5 credentials not configured")
             return False
 
-        logger.info("MT5 connection established successfully")
-
-        # Check symbol availability
-        symbol_info = mt5.symbol_info(symbol)
-        if not symbol_info:
-            logger.error(f"Symbol {symbol} not found in MT5")
+    def disconnect_mt5(self):
+        """Disconnect from MT5"""
+        if self.connected:
             mt5.shutdown()
+            self.connected = False
+            logger.info("MT5 disconnected")
+
+    def parse_signal(self, signal_text):
+        """Parse trading signal from text format"""
+        try:
+            # Expected format: "BUY AAPL SL=150.00 TP=160.00"
+            parts = signal_text.upper().split()
+
+            if len(parts) < 2:
+                return None
+
+            action = parts[0]  # BUY or SELL
+            symbol = parts[1]   # AAPL
+
+            # Default values
+            sl = None
+            tp = None
+            volume = 0.01  # Default volume
+
+            # Parse optional parameters
+            for part in parts[2:]:
+                if part.startswith('SL='):
+                    sl = float(part.split('=')[1])
+                elif part.startswith('TP='):
+                    tp = float(part.split('=')[1])
+                elif part.startswith('VOL='):
+                    volume = float(part.split('=')[1])
+
+            return {
+                'action': action,
+                'symbol': symbol,
+                'sl': sl,
+                'tp': tp,
+                'volume': volume
+            }
+
+        except Exception as e:
+            logger.error(f"Error parsing signal: {e}")
+            return None
+
+    def execute_trade(self, signal_data):
+        """Execute trade based on signal data"""
+        if not self.connected:
+            logger.error("MT5 not connected")
             return False
 
-        logger.info(f"Symbol {symbol} found. Visible: {symbol_info.visible}")
+        try:
+            symbol = signal_data['symbol']
+            action = signal_data['action']
+            volume = signal_data.get('volume', 0.01)
+            sl = signal_data.get('sl')
+            tp = signal_data.get('tp')
 
-        # Make symbol visible if needed
-        if not symbol_info.visible:
-            logger.info(f"Making symbol {symbol} visible")
-            if not mt5.symbol_select(symbol, True):
-                logger.error(f"Failed to select symbol {symbol}")
-                mt5.shutdown()
+            # Get symbol info
+            symbol_info = mt5.symbol_info(symbol)
+            if symbol_info is None:
+                logger.error(f"Symbol {symbol} not found")
                 return False
 
-        # Get current price
-        tick = mt5.symbol_info_tick(symbol)
-        if not tick:
-            logger.error(f"Failed to get tick data for {symbol}")
-            mt5.shutdown()
+            # Check if symbol is visible
+            if not symbol_info.visible:
+                if not mt5.symbol_select(symbol, True):
+                    logger.error(f"Failed to select symbol {symbol}")
+                    return False
+
+            # Prepare order request
+            order_type = mt5.ORDER_TYPE_BUY if action == 'BUY' else mt5.ORDER_TYPE_SELL
+
+            price = mt5.symbol_info_tick(symbol).ask if action == 'BUY' else mt5.symbol_info_tick(symbol).bid
+
+            request = {
+                "action": mt5.TRADE_ACTION_DEAL,
+                "symbol": symbol,
+                "volume": volume,
+                "type": order_type,
+                "price": price,
+                "sl": sl,
+                "tp": tp,
+                "deviation": 10,
+                "magic": 234000,
+                "comment": f"Telegram Signal {datetime.now().strftime('%H:%M:%S')}",
+                "type_time": mt5.ORDER_TIME_GTC,
+                "type_filling": mt5.ORDER_FILLING_IOC,
+            }
+
+            # Send order
+            result = mt5.order_send(request)
+
+            if result.retcode == mt5.TRADE_RETCODE_DONE:
+                logger.info(f"Trade executed successfully: {action} {symbol} at {price}")
+                return True
+            else:
+                logger.error(f"Trade execution failed: {result.retcode}")
+                return False
+
+        except Exception as e:
+            logger.error(f"Error executing trade: {e}")
             return False
 
-        # Define order type and price
-        order_type = 0 if action.upper() == "BUY" else 1  # 0 for BUY, 1 for SELL
-        price = tick.ask if order_type == 0 else tick.bid
+    def process_signal(self, signal_text):
+        """Process a trading signal from text"""
+        logger.info(f"Processing signal: {signal_text}")
 
-        logger.info(f"Order details: Type={order_type}, Price={price}, Lot Size={FIXED_LOT_SIZE}")
+        # Parse signal
+        signal_data = self.parse_signal(signal_text)
 
-        # Prepare trade request
-        request = {
-            "action": mt5.TRADE_ACTION_DEAL,
-            "symbol": symbol,
-            "volume": FIXED_LOT_SIZE,
-            "type": order_type,
-            "price": price,
-            "sl": sl,
-            "tp": tp,
-            "deviation": 10,
-            "magic": 234000,
-            "comment": "Telegram Signal Trade",
-            "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
-        }
-
-        logger.info(f"Sending trade request: {request}")
-
-        # Send order
-        result = mt5.order_send(request)
-
-        if result is None:
-            error_code, description = mt5.last_error()
-            logger.error(f"Order send failed: {error_code}, {description}")
-            mt5.shutdown()
+        if not signal_data:
+            logger.error("Failed to parse signal")
             return False
 
-        logger.info(f"Order result: retcode={result.retcode}, deal={result.deal}, order={result.order}")
+        # Execute trade
+        success = self.execute_trade(signal_data)
 
-        if result.retcode != mt5.TRADE_RETCODE_DONE:
-            logger.error(f"Order failed: retcode={result.retcode}, message={result.comment}")
-            mt5.shutdown()
-            return False
-        else:
-            logger.info(f"Trade placed successfully: Deal ID={result.deal}, Order ID={result.order}")
-            mt5.shutdown()
-            return True
+        return success
 
-    except Exception as e:
-        logger.error(f"Error in place_trade: {e}")
-        try:
-            mt5.shutdown()
-        except:
-            pass
-        return False
+    def get_account_info(self):
+        """Get account information"""
+        if not self.connected:
+            return None
 
-def test_connection():
-    """Test MT5 connection and basic functionality."""
-    logger.info("Testing MT5 connection...")
-
-    try:
-        if not mt5.initialize(login=login, password=password, server=server):
-            error_code, description = mt5.last_error()
-            logger.error(f"MT5 connection test failed: {error_code}, {description}")
-            return False
-
-        logger.info("MT5 connection test successful")
-
-        # Test account info
         account_info = mt5.account_info()
         if account_info:
-            logger.info(f"Account: {account_info.login}, Balance: {account_info.balance}")
-        else:
-            logger.warning("Could not retrieve account info")
+            return {
+                'balance': account_info.balance,
+                'equity': account_info.equity,
+                'margin': account_info.margin,
+                'margin_free': account_info.margin_free,
+                'profit': account_info.profit
+            }
+        return None
 
-        mt5.shutdown()
-        return True
+    def get_positions(self):
+        """Get current positions"""
+        if not self.connected:
+            return []
 
-    except Exception as e:
-        logger.error(f"Connection test error: {e}")
-        return False
+        positions = mt5.positions_get()
+        if positions:
+            return [{
+                'ticket': pos.ticket,
+                'symbol': pos.symbol,
+                'type': 'BUY' if pos.type == mt5.POSITION_TYPE_BUY else 'SELL',
+                'volume': pos.volume,
+                'price_open': pos.price_open,
+                'price_current': pos.price_current,
+                'profit': pos.profit,
+                'sl': pos.sl,
+                'tp': pos.tp
+            } for pos in positions]
 
-def interactive_test():
-    """Interactive testing mode for debugging."""
-    logger.info("Starting interactive test mode")
-    logger.info("Type trading signals in format: BUY EURUSD SL=1.0500 TP=1.0700")
-    logger.info("Type 'test' to test connection, 'quit' to exit")
+        return []
 
-    while True:
-        try:
-            signal = input("\nEnter signal: ").strip()
-            if signal.lower() == 'quit':
-                break
-            elif signal.lower() == 'test':
-                test_connection()
-            elif signal:
-                process_signal(signal)
-        except KeyboardInterrupt:
-            logger.info("Interrupted by user")
-            break
-        except Exception as e:
-            logger.error(f"Interactive test error: {e}")
+# Global trader instance
+signal_trader = TelegramSignalTrader()
 
-if __name__ == "__main__":
-    logger.info("=== Telegram Signal Trader Algorithm ===")
-    logger.info(f"Configuration: Login={login}, Server={server}, Lot Size={FIXED_LOT_SIZE}, Max Trades={MAX_DAILY_TRADES}")
+def process_signal(signal_text):
+    """Convenience function to process trading signals"""
+    return signal_trader.process_signal(signal_text)
 
-    # Test connection on startup
+def test_connection():
+    """Test MT5 connection"""
+    return signal_trader.connected
+
+if __name__ == '__main__':
+    # Test connection
     if test_connection():
-        logger.info("MT5 connection verified. Algorithm ready.")
-    else:
-        logger.error("MT5 connection failed. Check your credentials and MT5 installation.")
+        print("✅ MT5 connection successful")
 
-    # Check if running in interactive mode
-    if len(sys.argv) > 1 and sys.argv[1] == "--interactive":
-        interactive_test()
+        # Get account info
+        account = signal_trader.get_account_info()
+        if account:
+            print(f"Account Balance: ${account['balance']:.2f}")
+            print(f"Account Equity: ${account['equity']:.2f}")
+
+        # Get positions
+        positions = signal_trader.get_positions()
+        print(f"Open Positions: {len(positions)}")
+
     else:
-        logger.info("Running in module mode. Import and use process_signal() function.")
-        logger.info("Example: process_signal('BUY EURUSD SL=1.0500 TP=1.0700')")
+        print("❌ MT5 connection failed")
+
+    # Cleanup
+    signal_trader.disconnect_mt5()

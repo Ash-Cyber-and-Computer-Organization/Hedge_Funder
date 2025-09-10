@@ -12,7 +12,17 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
-echo ✅ Backend dependencies installed
+echo ✅ Backend Python dependencies installed
+echo.
+
+echo 📦 Installing Node.js dependencies for proxy...
+npm install node-fetch cors
+if %errorlevel% neq 0 (
+    echo ❌ Node.js dependencies installation failed!
+    pause
+    exit /b 1
+)
+echo ✅ Node.js dependencies installed
 echo.
 
 echo 📦 Installing frontend dependencies...
@@ -43,12 +53,17 @@ echo.
 echo 🌟 Starting services...
 echo.
 
-echo 📊 Starting N8N API Server (Terminal 1)
-start "N8N API Server" cmd /k "cd backend && python n8n_api.py"
+echo 📊 Starting N8N API Proxy Server (Terminal 1)
+start "N8N API Proxy Server" cmd /k "cd backend && node proxy.js"
 
 timeout /t 3 /nobreak >nul
 
-echo 🤖 Starting N8N Workflow Engine (Terminal 2)
+echo 🔧 Starting N8N Backend API Server (Terminal 2)
+start "N8N Backend API Server" cmd /k "cd backend && python n8n_api.py"
+
+timeout /t 3 /nobreak >nul
+
+echo 🤖 Starting N8N Workflow Engine (Terminal 3)
 start "N8N Engine" cmd /k "n8n start"
 
 timeout /t 3 /nobreak >nul

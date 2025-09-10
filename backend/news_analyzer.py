@@ -342,6 +342,155 @@ class NewsAnalyzer:
             logger.warning(f"Yahoo Finance search API failed: {e}")
             return []
 
+    def get_newsapi_news(self, symbol, days_back=None):
+        """Fetch news articles for a symbol from NewsAPI"""
+        if days_back is None:
+            days_back = self.news_lookback_days
+
+        newsapi_key = os.getenv("NEWSAPI_KEY")
+        if not newsapi_key or newsapi_key == "your_newsapi_key_here":
+            logger.warning("NewsAPI key not configured properly")
+            return []
+
+        try:
+            logger.info(f"Fetching news for {symbol} from NewsAPI (last {days_back} days)")
+
+            # Initialize NewsAPI client
+            newsapi = NewsApiClient(api_key=newsapi_key)
+
+            # Calculate date range
+            from_date = (datetime.now() - timedelta(days=days_back)).strftime('%Y-%m-%d')
+            to_date = datetime.now().strftime('%Y-%m-%d')
+
+            # Search for news about the symbol
+            query = f'"{symbol}" OR "{symbol} stock" OR "{symbol} shares"'
+            all_articles = newsapi.get_everything(
+                q=query,
+                from_param=from_date,
+                to=to_date,
+                language='en',
+                sort_by='publishedAt',
+                page_size=20
+            )
+
+            if not all_articles or all_articles['status'] != 'ok':
+                logger.info(f"No news data returned from NewsAPI for {symbol}")
+                return []
+
+            logger.info(f"NewsAPI returned {len(all_articles['articles'])} raw articles for {symbol}")
+
+            filtered_news = []
+            for article in all_articles['articles']:
+                try:
+                    # Parse publication date
+                    published_str = article.get('publishedAt', '')
+                    if published_str:
+                        # Remove 'Z' if present and parse
+                        published_str = published_str.replace('Z', '+00:00')
+                        published_date = datetime.fromisoformat(published_str.replace('T', ' '))
+                    else:
+                        published_date = datetime.now()
+
+                    # Only include articles with valid titles
+                    title = article.get('title', '').strip()
+                    if title and len(title) > 10:
+                        filtered_news.append({
+                            'title': title,
+                            'summary': article.get('description', '').strip() if article.get('description') else '',
+                            'link': article.get('url', ''),
+                            'published': published_date,
+                            'publisher': article.get('source', {}).get('name', ''),
+                            'symbol': symbol
+                        })
+                except Exception as e:
+                    logger.warning(f"Error processing NewsAPI article: {e}")
+                    continue
+
+            logger.info(f"Found {len(filtered_news)} recent news articles for {symbol} from NewsAPI")
+            return filtered_news
+
+        except Exception as e:
+            logger.error(f"Error fetching news from NewsAPI for {symbol}: {e}")
+            return []
+
+    def get_rss_news(self, symbol, days_back=None):
+        """Fetch news from major financial RSS feeds"""
+        if days_back is None:
+            days_back = self.news_lookback_days
+
+        try:
+            logger.info(f"Fetching RSS news for {symbol} from financial sources")
+
+            # Major financial news RSS feeds
+            rss_feeds = [
+                'https://feeds.finance.yahoo.com/rss/2.0/headline',
+                'https://www.investing.com/rss/news.rss',
+                'https://feeds.marketwatch.com/marketwatch/marketpulse/',
+                'https://feeds.bloomberg.com/markets/news.rss',
+                'https://feeds.reuters.com/reuters/businessNews',
+                'https://feeds.cnbc.com/RSS',
+                'https://feeds.wsj.com/wsj/xml/rss/3_7041.xml',  # WSJ Markets
+                'https://feeds.foxbusiness.com/foxbusiness/latest'
+            ]
+
+            all_news = []
+            cutoff_date = datetime.now() - timedelta(days=days_back)
+
+            for feed_url in rss_feeds:
+                try:
+                    logger.info(f"Fetching from RSS feed: {feed_url}")
+                    feed = feedparser.parse(feed_url)
+
+                    if not feed.entries:
+                        logger.warning(f"No entries found in RSS feed: {feed_url}")
+                        continue
+
+                    for entry in feed.entries:
+                        try:
+                            # Check if the article is about our symbol
+                            title = entry.get('title', '').lower()
+                            summary = entry.get('summary', '').lower() if entry.get('summary') else ''
+
+                            # Look for symbol mentions in title or summary
+                            symbol_lower = symbol.lower()
+                            if symbol_lower not in title and symbol_lower not in summary:
+                                continue
+
+                            # Parse publication date
+                            published_str = entry.get('published_parsed')
+                            if published_str:
+                                published_date = datetime(*published_str[:6])
+                            else:
+                                published_date = datetime.now()
+
+                            # Only include recent articles
+                            if published_date >= cutoff_date:
+                                all_news.append({
+                                    'title': entry.get('title', '').strip(),
+                                    'summary': entry.get('summary', '').strip() if entry.get('summary') else '',
+                                    'link': entry.get('link', ''),
+                                    'published': published_date,
+                                    'publisher': entry.get('source', {}).get('title', '') if entry.get('source') else feed.feed.get('title', ''),
+                                    'symbol': symbol
+                                })
+
+                        except Exception as e:
+                            logger.warning(f"Error processing RSS entry: {e}")
+                            continue
+
+                    time.sleep(0.5)  # Rate limiting between feeds
+
+                except Exception as e:
+                    logger.warning(f"Error fetching RSS feed {feed_url}: {e}")
+                    continue
+
+            logger.info(f"Found {len(all_news)} RSS articles for {symbol}")
+            return all_news
+
+        except Exception as e:
+            logger.error(f"Error fetching RSS news for {symbol}: {e}")
+            return []
+
     def get_combined_news(self, symbol, days_back=None):
         """Fetch news from multiple sources with fallback mechanism"""
         if days_back is None:
@@ -364,6 +513,22 @@ class NewsAnalyzer:
                 logger.info(f"Added {len(finnhub_news)} articles from Finnhub")
         else:
             logger.info("Finnhub API key not configured, skipping Finnhub news")
+
+        # Try NewsAPI as third source (if API key is available)
+        newsapi_key = os.getenv("NEWSAPI_KEY")
+        if newsapi_key and newsapi_key != "your_newsapi_key_here":
+            newsapi_news = self.get_newsapi_news(symbol, days_back)
+            if newsapi_news:
+                all_news.extend(newsapi_news)
+                logger.info(f"Added {len(newsapi_news)} articles from NewsAPI")
+        else:
+            logger.info("NewsAPI key not configured, skipping NewsAPI news")
+
+        # Try RSS feeds as fourth source
+        rss_news = self.get_rss_news(symbol, days_back)
+        if rss_news:
+            all_news.extend(rss_news)
+            logger.info(f"Added {len(rss_news)} articles from RSS feeds")
 
         # If no news from any source, try with a longer time period
         if not all_news and days_back <= 3:

@@ -532,6 +532,6 @@ def learn_patterns():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.getenv('N8N_API_PORT', 5001))
+    port = int(os.getenv('N8N_API_PORT', 5002))
     logger.info(f"Starting N8N API server on port {port}")
     app.run(host='0.0.0.0', port=port, debug=True)

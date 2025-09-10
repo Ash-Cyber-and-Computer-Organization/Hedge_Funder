@@ -37,11 +37,25 @@ const TradingDashboard = () => {
 
   const analyzeSymbol = async (symbol) => {
     try {
-      const response = await axios.post('http://localhost:5001/api/news/analyze', {
+      const response = await axios.post('http://localhost:5001/api/finnhub/news', {
         symbol: symbol,
         days_back: 3
       });
-      alert(`Analysis complete for ${symbol}. Signal: ${response.data.final_signal?.signal || 'HOLD'}`);
+
+      const sentiment = response.data.sentiment_analysis;
+      let sentimentText = 'N/A';
+
+      if (sentiment && typeof sentiment === 'object') {
+        if (sentiment.overall_sentiment) {
+          sentimentText = `${sentiment.overall_sentiment} (${sentiment.confidence_score?.toFixed(2) || 'N/A'})`;
+        } else if (sentiment.sentiment) {
+          sentimentText = sentiment.sentiment;
+        }
+      } else if (typeof sentiment === 'string') {
+        sentimentText = sentiment;
+      }
+
+      alert(`Analysis complete for ${symbol}. Found ${response.data.total_articles || 0} articles. Sentiment: ${sentimentText}`);
       fetchDashboardData(); // Refresh data
     } catch (err) {
       alert('Analysis failed: ' + err.message);
@@ -122,24 +136,277 @@ const TradingDashboard = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">🚀 Advanced Trading Dashboard</h1>
           <p className="text-gray-400">Real-time N8N-powered trading with AI analysis</p>
-          <div className="mt-4 flex gap-4">
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-10 gap-2">
+            {/* Major Tech Stocks */}
             <button
               onClick={() => analyzeSymbol('AAPL')}
-              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg"
+              className="bg-blue-600 hover:bg-blue-700 px-2 py-2 rounded-lg text-xs"
             >
-              Analyze AAPL
+              📱 AAPL
             </button>
             <button
               onClick={() => analyzeSymbol('GOOGL')}
-              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"
+              className="bg-green-600 hover:bg-green-700 px-2 py-2 rounded-lg text-xs"
             >
-              Analyze GOOGL
+              🔍 GOOGL
             </button>
             <button
               onClick={() => analyzeSymbol('MSFT')}
-              className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg"
+              className="bg-purple-600 hover:bg-purple-700 px-2 py-2 rounded-lg text-xs"
             >
-              Analyze MSFT
+              💻 MSFT
+            </button>
+            <button
+              onClick={() => analyzeSymbol('TSLA')}
+              className="bg-red-600 hover:bg-red-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🚗 TSLA
+            </button>
+            <button
+              onClick={() => analyzeSymbol('NVDA')}
+              className="bg-green-500 hover:bg-green-600 px-2 py-2 rounded-lg text-xs"
+            >
+              🎮 NVDA
+            </button>
+            <button
+              onClick={() => analyzeSymbol('AMZN')}
+              className="bg-orange-600 hover:bg-orange-700 px-2 py-2 rounded-lg text-xs"
+            >
+              📦 AMZN
+            </button>
+            <button
+              onClick={() => analyzeSymbol('META')}
+              className="bg-blue-500 hover:bg-blue-600 px-2 py-2 rounded-lg text-xs"
+            >
+              👥 META
+            </button>
+            <button
+              onClick={() => analyzeSymbol('NFLX')}
+              className="bg-red-500 hover:bg-red-600 px-2 py-2 rounded-lg text-xs"
+            >
+              🎬 NFLX
+            </button>
+
+            {/* Semiconductor & Hardware */}
+            <button
+              onClick={() => analyzeSymbol('AMD')}
+              className="bg-red-600 hover:bg-red-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🔧 AMD
+            </button>
+            <button
+              onClick={() => analyzeSymbol('INTC')}
+              className="bg-blue-700 hover:bg-blue-800 px-2 py-2 rounded-lg text-xs"
+            >
+              💾 INTC
+            </button>
+            <button
+              onClick={() => analyzeSymbol('QCOM')}
+              className="bg-indigo-600 hover:bg-indigo-700 px-2 py-2 rounded-lg text-xs"
+            >
+              📡 QCOM
+            </button>
+            <button
+              onClick={() => analyzeSymbol('CRM')}
+              className="bg-teal-600 hover:bg-teal-700 px-2 py-2 rounded-lg text-xs"
+            >
+              ☁️ CRM
+            </button>
+
+            {/* Entertainment & Media */}
+            <button
+              onClick={() => analyzeSymbol('DIS')}
+              className="bg-blue-600 hover:bg-blue-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🎢 DIS
+            </button>
+            <button
+              onClick={() => analyzeSymbol('SPOT')}
+              className="bg-green-700 hover:bg-green-800 px-2 py-2 rounded-lg text-xs"
+            >
+              🎵 SPOT
+            </button>
+
+            {/* Financial Services */}
+            <button
+              onClick={() => analyzeSymbol('JPM')}
+              className="bg-slate-600 hover:bg-slate-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🏦 JPM
+            </button>
+            <button
+              onClick={() => analyzeSymbol('V')}
+              className="bg-cyan-600 hover:bg-cyan-700 px-2 py-2 rounded-lg text-xs"
+            >
+              💳 V
+            </button>
+            <button
+              onClick={() => analyzeSymbol('COIN')}
+              className="bg-yellow-600 hover:bg-yellow-700 px-2 py-2 rounded-lg text-xs"
+            >
+              ₿ COIN
+            </button>
+
+            {/* Major Cryptocurrencies */}
+            <button
+              onClick={() => analyzeSymbol('BTC-USD')}
+              className="bg-yellow-500 hover:bg-yellow-600 px-2 py-2 rounded-lg text-xs"
+            >
+              ₿ BTC
+            </button>
+            <button
+              onClick={() => analyzeSymbol('ETH-USD')}
+              className="bg-gray-600 hover:bg-gray-700 px-2 py-2 rounded-lg text-xs"
+            >
+              Ξ ETH
+            </button>
+            <button
+              onClick={() => analyzeSymbol('ADA-USD')}
+              className="bg-blue-400 hover:bg-blue-500 px-2 py-2 rounded-lg text-xs"
+            >
+              ₳ ADA
+            </button>
+            <button
+              onClick={() => analyzeSymbol('BNB-USD')}
+              className="bg-yellow-600 hover:bg-yellow-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🟡 BNB
+            </button>
+            <button
+              onClick={() => analyzeSymbol('SOL-USD')}
+              className="bg-purple-500 hover:bg-purple-600 px-2 py-2 rounded-lg text-xs"
+            >
+              ◎ SOL
+            </button>
+            <button
+              onClick={() => analyzeSymbol('MATIC-USD')}
+              className="bg-purple-600 hover:bg-purple-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🟣 MATIC
+            </button>
+            <button
+              onClick={() => analyzeSymbol('AVAX-USD')}
+              className="bg-red-400 hover:bg-red-500 px-2 py-2 rounded-lg text-xs"
+            >
+              🏔️ AVAX
+            </button>
+            <button
+              onClick={() => analyzeSymbol('DOT-USD')}
+              className="bg-pink-600 hover:bg-pink-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🔗 DOT
+            </button>
+            <button
+              onClick={() => analyzeSymbol('LINK-USD')}
+              className="bg-blue-600 hover:bg-blue-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🔗 LINK
+            </button>
+            <button
+              onClick={() => analyzeSymbol('UNI-USD')}
+              className="bg-pink-500 hover:bg-pink-600 px-2 py-2 rounded-lg text-xs"
+            >
+              🦄 UNI
+            </button>
+
+            {/* ETFs and Indices */}
+            <button
+              onClick={() => analyzeSymbol('SPY')}
+              className="bg-green-700 hover:bg-green-800 px-2 py-2 rounded-lg text-xs"
+            >
+              📈 SPY
+            </button>
+            <button
+              onClick={() => analyzeSymbol('QQQ')}
+              className="bg-indigo-600 hover:bg-indigo-700 px-2 py-2 rounded-lg text-xs"
+            >
+              💎 QQQ
+            </button>
+            <button
+              onClick={() => analyzeSymbol('IWM')}
+              className="bg-orange-600 hover:bg-orange-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🏢 IWM
+            </button>
+            <button
+              onClick={() => analyzeSymbol('VTI')}
+              className="bg-emerald-600 hover:bg-emerald-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🌍 VTI
+            </button>
+
+            {/* Commodities */}
+            <button
+              onClick={() => analyzeSymbol('GLD')}
+              className="bg-yellow-600 hover:bg-yellow-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🏆 GLD
+            </button>
+            <button
+              onClick={() => analyzeSymbol('SLV')}
+              className="bg-gray-500 hover:bg-gray-600 px-2 py-2 rounded-lg text-xs"
+            >
+              🥈 SLV
+            </button>
+            <button
+              onClick={() => analyzeSymbol('USO')}
+              className="bg-black hover:bg-gray-800 px-2 py-2 rounded-lg text-xs"
+            >
+              🛢️ USO
+            </button>
+
+            {/* International Markets */}
+            <button
+              onClick={() => analyzeSymbol('EWJ')}
+              className="bg-red-600 hover:bg-red-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🇯🇵 EWJ
+            </button>
+            <button
+              onClick={() => analyzeSymbol('EWG')}
+              className="bg-yellow-600 hover:bg-yellow-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🇩🇪 EWG
+            </button>
+            <button
+              onClick={() => analyzeSymbol('EFA')}
+              className="bg-blue-600 hover:bg-blue-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🌍 EFA
+            </button>
+
+            {/* Bonds and Fixed Income */}
+            <button
+              onClick={() => analyzeSymbol('BND')}
+              className="bg-green-600 hover:bg-green-700 px-2 py-2 rounded-lg text-xs"
+            >
+              📊 BND
+            </button>
+            <button
+              onClick={() => analyzeSymbol('TLT')}
+              className="bg-blue-700 hover:bg-blue-800 px-2 py-2 rounded-lg text-xs"
+            >
+              🏛️ TLT
+            </button>
+            <button
+              onClick={() => analyzeSymbol('LQD')}
+              className="bg-indigo-600 hover:bg-indigo-700 px-2 py-2 rounded-lg text-xs"
+            >
+              💼 LQD
+            </button>
+
+            {/* Real Estate */}
+            <button
+              onClick={() => analyzeSymbol('VNQ')}
+              className="bg-orange-600 hover:bg-orange-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🏠 VNQ
+            </button>
+            <button
+              onClick={() => analyzeSymbol('IYR')}
+              className="bg-red-600 hover:bg-red-700 px-2 py-2 rounded-lg text-xs"
+            >
+              🏢 IYR
             </button>
           </div>
         </div>
@@ -294,6 +561,7 @@ const TradingDashboard = () => {
             <button
               onClick={() => window.open('https://ash1industries.app.n8n.cloud', '_blank')}
               className="bg-purple-600 hover:bg-purple-700 p-4 rounded-lg text-center"
+              title="Open the N8N Cloud dashboard in a new tab"
             >
               <div className="text-2xl mb-2">🤖</div>
               <div>Open N8N Cloud</div>
@@ -301,6 +569,7 @@ const TradingDashboard = () => {
             <button
               onClick={executeN8NWorkflow}
               className="bg-indigo-600 hover:bg-indigo-700 p-4 rounded-lg text-center"
+              title="Trigger the N8N trading signals workflow"
             >
               <div className="text-2xl mb-2">⚡</div>
               <div>Execute Workflow</div>

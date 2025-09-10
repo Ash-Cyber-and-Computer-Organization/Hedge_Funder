@@ -1,0 +1,231 @@
+{
+  "name": "Minimal News Trading Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook/news",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5001/api/finnhub/news",
+        "method": "POST",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"symbol\": $node[\"Webhook\"].json[\"body\"][\"symbol\"], \"days_back\": 3 } }}",
+        "headerParameters": {
+          "parameter": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "name": "HTTP Request - Finnhub News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5001/api/signals/generate",
+        "method": "POST",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"symbols\": [$node[\"HTTP Request - Finnhub News\"].json[\"symbol\"]] } }}",
+        "headerParameters": {
+          "parameter": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "name": "HTTP Request - Generate Signals",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $node[\"HTTP Request - Generate Signals\"].json[\"signals\"][0][\"confidence\"] }}",
+              "operation": "greater",
+              "value2": 0.6
+            }
+          ]
+        }
+      },
+      "name": "If - High Confidence",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5001/api/trade/execute",
+        "method": "POST",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"signal\": $node[\"HTTP Request - Generate Signals\"].json[\"signals\"][0] } }}",
+        "headerParameters": {
+          "parameter": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "name": "HTTP Request - Execute Trade",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1120,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5001/api/alerts/send",
+        "method": "POST",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"message\": \"🚀 Trade Executed: \" + $node[\"HTTP Request - Generate Signals\"].json[\"signals\"][0][\"signal\"] + \" \" + $node[\"HTTP Request - Generate Signals\"].json[\"signals\"][0][\"symbol\"], \"type\": \"success\" } }}",
+        "headerParameters": {
+          "parameter": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "name": "HTTP Request - Send Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1340,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5001/api/alerts/send",
+        "method": "POST",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"message\": \"⚠️ Low Confidence Signal: \" + $node[\"HTTP Request - Generate Signals\"].json[\"signals\"][0][\"signal\"] + \" \" + $node[\"HTTP Request - Generate Signals\"].json[\"signals\"][0][\"symbol\"] + \" (\" + ($node[\"HTTP Request - Generate Signals\"].json[\"signals\"][0][\"confidence\"] * 100).toString() + \"%)\", \"type\": \"warning\" } }}",
+        "headerParameters": {
+          "parameter": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "name": "HTTP Request - Low Confidence Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1120,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Finnhub News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Finnhub News": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Generate Signals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Generate Signals": {
+      "main": [
+        [
+          {
+            "node": "If - High Confidence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - High Confidence": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Execute Trade",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request - Low Confidence Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Execute Trade": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "staticData": null
+}
