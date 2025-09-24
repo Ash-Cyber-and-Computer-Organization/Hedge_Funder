@@ -1,225 +1,216 @@
-# Telegram Signal Trader Algorithm
+# Hedge Funder Backend - MongoDB Integration
 
-This is a simplified trading algorithm that processes trading signals and executes trades on MetaTrader 5.
+This backend provides a comprehensive market analysis system with MongoDB caching for improved performance and data persistence.
 
 ## Features
 
-- Processes trading signals in the format: `ACTION SYMBOL SL=STOPLOSS TP=TAKEPROFIT`
-- Executes trades on MetaTrader 5 platform
-- Daily trade limit protection
-- Comprehensive logging
-- Environment-based configuration
+- **Real-time Stock Data**: Fetch live stock prices from multiple APIs (Finnhub, Alpha Vantage, Twelve Data)
+- **Historical Data Caching**: Store and retrieve historical market data with MongoDB
+- **Intraday Data Support**: Cache and retrieve intraday trading data
+- **Technical Analysis**: Built-in indicators (SMA, EMA, RSI) for trading decisions
+- **Rate Limiting**: Intelligent rate limiting to respect API constraints
+- **Data Persistence**: All data stored in MongoDB for reliability and performance
 
-## Signal Format
+## Setup Instructions
 
-The algorithm expects signals in the following format:
-```
-BUY EURUSD SL=1.0500 TP=1.0700
-SELL GBPUSD SL=1.2500 TP=1.2300
-```
+### 1. Install Dependencies
 
-## Setup
-
-1. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Copy the environment template:
-```bash
-cp .env.example .env
-```
+### 2. MongoDB Setup
 
-3. Configure your MetaTrader 5 credentials in `.env`:
-```env
-MT5_LOGIN=your_mt5_login
-MT5_PASSWORD=your_mt5_password
-MT5_SERVER=your_mt5_server
-FIXED_LOT_SIZE=0.2
-MAX_DAILY_TRADES=10
+1. **Install MongoDB** (if not already installed):
+   - Download from [MongoDB Community Server](https://www.mongodb.com/try/download/community)
+   - Or use Docker: `docker run -d -p 27017:27017 --name mongodb mongo:latest`
+
+2. **Start MongoDB**:
+   - Windows: Run `mongod.exe` from your MongoDB installation directory
+   - Linux/Mac: `sudo systemctl start mongod` or `brew services start mongodb-community`
+
+3. **Verify Connection**:
+   ```bash
+   mongo --eval "db.runCommand('ismaster')"
+   ```
+
+### 3. Environment Configuration
+
+1. **Copy the example environment file**:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Update `.env` with your configuration**:
+   ```env
+   # MongoDB Configuration
+   MONGODB_URL=mongodb://localhost:27017/
+   MONGODB_DATABASE=hedge_funder
+
+   # API Keys (get these from respective services)
+   FINNHUB_API_KEY=your_finnhub_api_key_here
+   ALPHA_VANTAGE_API_KEY=your_alpha_vantage_api_key_here
+   TWELVE_DATA_API_KEY=your_twelve_data_api_key_here
+
+   # Data Configuration
+   DEFAULT_TICKERS=AAPL,GOOGL,MSFT,TSLA
+   CACHE_DAYS=30
+   CACHE_HOURS=24
+   CACHE_MINUTES=60
+   ```
+
+### 4. Get API Keys
+
+- **Finnhub**: Sign up at [finnhub.io](https://finnhub.io/) for real-time data
+- **Alpha Vantage**: Get free API key at [alphavantage.co](https://www.alphavantage.co/support/#api-key)
+- **Twelve Data**: Register at [twelvedata.com](https://twelvedata.com/) for intraday data
+
+### 5. Run Tests
+
+Test the MongoDB integration:
+```bash
+python test_mongodb_integration.py
 ```
 
 ## Usage
 
-### Quick Start
-
-1. **Install dependencies:**
-```bash
-pip install -r requirements.txt
-```
-
-2. **Set up environment:**
-```bash
-cp .env.example .env
-# Edit .env with your MT5 credentials
-```
-
-3. **Test connection:**
-```bash
-python run_trader.py --test
-```
-
-4. **Run interactive mode:**
-```bash
-python run_trader.py --interactive
-```
-
-### Running Options
-
-#### Using the Run Script (Recommended)
-
-```bash
-# Test MT5 connection
-python run_trader.py --test
-
-# Process a single signal
-python run_trader.py --signal "BUY EURUSD SL=1.0500 TP=1.0700"
-
-# Interactive testing mode
-python run_trader.py --interactive
-
-# Run demo signals (simulation)
-python run_trader.py --demo
-```
-
-#### Direct Python Execution
-
-```bash
-# Basic module test
-python telegram_signal_trader.py
-
-# Interactive mode
-python telegram_signal_trader.py --interactive
-```
-
-#### As a Python Module
+### Basic Market Analysis
 
 ```python
-from telegram_signal_trader import process_signal, test_connection
+from Market Analysis Algorithm.market_analysis import run_market_analysis
 
-# Test connection
-if test_connection():
-    print("MT5 connected successfully!")
+# Run analysis for default tickers
+result = run_market_analysis()
+print(result)
 
-# Process a trading signal
-signal = "BUY EURUSD SL=1.0500 TP=1.0700"
-process_signal(signal)
+# Run analysis for specific tickers
+result = run_market_analysis(['AAPL', 'GOOGL'])
 ```
 
-## Functions
+### Fetch Real-time Prices
 
-### `process_signal(signal: str)`
-Processes an incoming trading signal and executes the trade if valid.
-
-**Parameters:**
-- `signal` (str): Trading signal in the format "ACTION SYMBOL SL=STOPLOSS TP=TAKEPROFIT"
-
-**Example:**
 ```python
-process_signal("BUY EURUSD SL=1.0500 TP=1.0700")
+from Market Analysis Algorithm.market_analysis import get_real_time_prices
+
+prices = get_real_time_prices(['AAPL', 'MSFT'])
+print(prices)
 ```
 
-### `place_trade(action: str, symbol: str, sl: float, tp: float)`
-Places a trade on MetaTrader 5.
+### Fetch Historical Data
 
-**Parameters:**
-- `action` (str): "BUY" or "SELL"
-- `symbol` (str): Trading symbol (e.g., "EURUSD")
-- `sl` (float): Stop loss price
-- `tp` (float): Take profit price
+```python
+from Market Analysis Algorithm.market_analysis import fetch_stock_data_batch
 
-## Configuration
+data = fetch_stock_data_batch(['AAPL'], start_date='2024-01-01', end_date='2024-12-31')
+print(data)
+```
 
-All configuration is done through environment variables:
+### Fetch Intraday Data
 
-- `MT5_LOGIN`: Your MetaTrader 5 login ID
-- `MT5_PASSWORD`: Your MetaTrader 5 password
-- `MT5_SERVER`: Your MetaTrader 5 server
-- `FIXED_LOT_SIZE`: Lot size for each trade (default: 0.2)
-- `MAX_DAILY_TRADES`: Maximum trades per day (default: 10)
+```python
+from Market Analysis Algorithm.market_analysis import intra_day_data
 
-## Error Handling
+data = intra_day_data(['AAPL'], period='1d')
+print(data)
+```
 
-The algorithm includes comprehensive error handling for:
-- Invalid signal formats
-- MetaTrader 5 connection issues
-- Symbol not found errors
-- Daily trade limit exceeded
-- Order execution failures
+## Data Storage
 
-## Logging
+The system automatically caches data in MongoDB:
 
-All activities are logged to the console including:
-- Received signals
-- Parsed signal components
-- Trade execution results
-- Error messages
+- **Market Data**: Historical daily data cached for 30 days
+- **Intraday Data**: Intraday data cached for 24 hours
+- **Real-time Prices**: Real-time prices cached for 60 minutes
 
-## Safety Features
+### Manual Data Management
 
-- Daily trade limit to prevent overtrading
-- Input validation for signal format
-- MetaTrader 5 connection verification
-- Symbol availability checking
-- Comprehensive error handling
+```python
+from data_storage import get_data_storage
 
-## Debugging and Troubleshooting
+storage = get_data_storage()
+
+# Get database statistics
+stats = storage.get_database_stats()
+
+# Clean up old data (older than 90 days)
+storage.cleanup_old_data(days_to_keep=90)
+```
+
+## Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   API Sources   │───▶│ Market Analysis  │───▶│   MongoDB       │
+│                 │    │ Algorithm        │    │   Storage       │
+│ • Finnhub       │    │                  │    │                 │
+│ • Alpha Vantage │    │ • Rate Limiting  │    │ • Market Data   │
+│ • Twelve Data   │    │ • Data Caching   │    │ • Intraday Data │
+│                 │    │ • Technical      │    │ • Real-time     │
+│                 │    │   Analysis       │    │   Prices        │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
+
+## Performance Benefits
+
+- **Reduced API Calls**: Cached data eliminates redundant API requests
+- **Faster Response Times**: Local MongoDB queries are much faster than external API calls
+- **Cost Savings**: Fewer API calls mean lower costs for paid services
+- **Reliability**: Data persists even if external APIs are unavailable
+- **Scalability**: MongoDB can handle large volumes of financial data efficiently
+
+## Monitoring
+
+The system provides comprehensive logging:
+
+- Connection status and errors
+- Data storage and retrieval operations
+- API rate limiting and retry attempts
+- Cache hit/miss ratios
+
+## Troubleshooting
 
 ### Common Issues
 
-1. **MT5 Connection Failed**
-   - Ensure MetaTrader 5 is installed and running
-   - Check your login credentials in `.env`
-   - Verify your MT5 server is correct
-   - Make sure your account has trading permissions
+1. **MongoDB Connection Failed**:
+   - Ensure MongoDB is running on the specified port
+   - Check `MONGODB_URL` in `.env` file
+   - Verify network connectivity
 
-2. **Symbol Not Found**
-   - Check if the symbol exists in your MT5 platform
-   - Some symbols may need to be added manually in MT5
-   - Verify the symbol name format (e.g., "EURUSD", not "EUR/USD")
+2. **API Rate Limits**:
+   - The system includes built-in rate limiting
+   - Check API key quotas and limits
+   - Monitor logs for rate limit warnings
 
-3. **Order Failed**
-   - Check your account balance
-   - Verify stop loss and take profit levels are reasonable
-   - Ensure the market is open for the symbol
-   - Check if you have sufficient margin
+3. **Missing Data**:
+   - Verify API keys are correctly configured
+   - Check ticker symbols are valid
+   - Review logs for specific error messages
 
-### Debug Commands
+### Debug Mode
 
-```bash
-# Test basic connection
-python run_trader.py --test
-
-# Run with detailed logging
-python telegram_signal_trader.py  # Check trading_bot.log file
-
-# Test with demo signals
-python run_trader.py --demo
-
-# Interactive debugging
-python run_trader.py --interactive
-```
-
-### Log Files
-
-- `trading_bot.log`: Contains detailed logs of all operations
-- Console output: Real-time logging during execution
-
-### Environment Variables Debug
-
-If you're having issues with environment variables:
+Enable debug logging by modifying the logging configuration:
 
 ```python
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-print("MT5_LOGIN:", os.getenv("MT5_LOGIN"))
-print("MT5_SERVER:", os.getenv("MT5_SERVER"))
-print("FIXED_LOT_SIZE:", os.getenv("FIXED_LOT_SIZE"))
+import logging
+logging.basicConfig(level=logging.DEBUG)
 ```
 
-## Dependencies
+## Contributing
 
-- MetaTrader5: For trading platform integration
-- python-dotenv: For environment variable management
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For issues and questions:
+- Check the troubleshooting section above
+- Review the logs for error messages
+- Ensure all dependencies are installed correctly
+- Verify API keys and MongoDB configuration

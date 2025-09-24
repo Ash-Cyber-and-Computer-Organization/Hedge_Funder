@@ -1,8 +1,0 @@
-curl -X POST https://ash1industries.app.n8n.cloud/webhook-test/trading/signal \
-  -H "Content-Type: application/json" \
-  -d '{
-    "currency": "EUR/USD",
-    "direction": "buy",
-    "stoploss": 1.0950,
-    "time": "2025-09-15T10:30:00Z"
-  }'

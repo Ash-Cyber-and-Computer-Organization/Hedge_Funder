@@ -1,0 +1,50 @@
+Metadata-Version: 2.4
+Name: stockpulse
+Version: 0.1.0
+Summary: A robust Python package for fetching and managing stock market data with yfinance to avoid frequent rate-limiting.
+Project-URL: Homepage, https://github.com/jayayjay/stockpulse
+Project-URL: Issues, https://github.com/jayayjay/stockpulse/issues
+Project-URL: Documentation, https://stockpulse.readthedocs.io/
+Author-email: "ghost(Vongchak Jonathan)" <vongchaknanbol@gmail.com>
+License-File: LICENCE
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Office/Business :: Financial
+Requires-Python: >=3.8
+Requires-Dist: pandas>=1.5.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: yfinance>=0.2.0
+Description-Content-Type: text/markdown
+
+# StockPulse
+A robust Python package for fetching and managing stock market data with rate-limiting.
+
+## Installation
+```bash
+pip install stockpulse
+```
+
+## Usage
+```
+from stockpulse import fetch_stock_data, intra_day_data, get_real_time_prices
+
+# Fetch historical data
+data = fetch_stock_data(tickers=["AAPL", "TSLA"], save_to_csv=True)
+
+# Fetch intraday data
+intraday = intra_day_data(tickers=["AAPL"], period="1d")
+
+# Get real-time prices
+prices = get_real_time_prices(tickers=["AAPL", "GOOGL"])
+print(prices)
+
+```
+
+## Features
+
+- Fetch historical and intraday stock data using yfinance.
+- Rate-limiting to avoid API restrictions.
+- Save data to CSV with organized file structure.
+- Continuous data fetching for real-time applications.

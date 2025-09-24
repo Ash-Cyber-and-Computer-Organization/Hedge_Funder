@@ -1,0 +1,7 @@
+{
+  "symbol": "={{ $json[\"symbol\"] }}",
+  "sentiment": "={{ $json[\"sentiment\"] }}",
+  "confidence": "={{ $json[\"confidence\"] }}",
+  "signal": "={{ $json[\"signal\"] }}",
+  "created_at": "={{ $now }}"
+}

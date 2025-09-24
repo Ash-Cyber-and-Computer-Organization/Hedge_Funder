@@ -1,0 +1,149 @@
+﻿Hedge Funder
+16.09.2025
+─
+
+
+
+
+Collins Dada
+C.T.O ( Chief Technical Officer )
+ASH Technologies®
+
+
+PROJECT OVERVIEW
+This platform is a multi-component automated trading and supervision system that connects admins, customers, AI trading algorithms, and brokers (MT5, Binance, etc.) through a unified web interface.
+Goals
+"The goal of Hedge_Funder is to design and deploy a secure, scalable, and automated AI-driven financial trading ecosystem that integrates market data ingestion, real-time analysis, predictive modeling, and trade execution through n8n workflows, with seamless CI/CD pipelines, containerized microservices, and cloud-native infrastructure, ensuring low-latency performance, transparency, compliance, monitoring, and actionable insights for optimized trading decisions and sustained business growth."
+-Moh 
+C.E.O ( Chief Executive Officer )
+Documentation
+Frontend
+* Public Pages: Login, Signup, Landing Page.
+
+* Admin Dashboard:
+
+   * Add/manage accounts (via MT5/Binance API).
+
+   * Monitor open positions, balances, P&L (profit/loss).
+
+   * Supervise accounts, disable/stop trades.
+
+   * Send signals manually to linked accounts.
+
+   * View live charts.
+
+      * Customer Dashboard:
+
+         * OAuth login → linked to their trading account.
+
+         * See ongoing trades, trade history, profits/losses, progress.
+
+________________
+
+
+Backend
+The backend has three main stages:
+            1. Trading Algorithms (3 types)
+
+               * Signal Parsing Algorithm → reads signals from Telegram groups, parses them, and sends incomplete ones to AI for completion.
+
+               * Market Analysis Algorithm → fetches financial data (e.g., yfinance, Finnhub), analyzes, and places trades instantly using an AI agent (like n8n).
+
+               * News & Social Sentiment Algorithm → scrapes Reddit/Twitter, analyzes trends/news, and places trades.
+
+                  2. AI Integration
+
+                     * Fills incomplete signals.
+
+                     * Optimizes trades with precise stop-loss (<10% error) and maximum take-profit values.
+
+                     * Chooses between short-term scalps or long-range trades.
+
+                     * Continuously improves accuracy by learning from results.
+
+                        3. Execution & Notifications
+
+                           * Executed trades are sent to broker platforms (MT5/Binance).
+
+                           * Every placed/closed trade triggers alerts via Telegram Bot + WhatsApp Bot.
+
+                           * Execution is funneled through ngrok endpoints for secure API calls.
+
+________________
+
+
+Infrastructure
+                              * Hosting: Linux EC2 server (AWS).
+
+                              * Trade Execution Environment: MT5 running via Wine.
+
+                              * Caching: Redis / Dragonfly → optimize real-time trade data and prevent API overload.
+
+                              * Database: Supabase → store trades, profits/losses, login data, history.
+
+                              * CI/CD: GitHub Actions → automated testing, build, and deployment.
+
+                              * Bots: Telegram & WhatsApp bots for admin/customer notifications.
+
+
+Required Roles
+Backend Engineers
+                                 * Develop APIs for account management (MT5, Binance).
+
+                                 * Build 3 trading algorithms (signals parsing, market analysis, sentiment analysis).
+
+                                 * Implement AI integrations for trade optimization.
+
+                                 * Connect Supabase DB for storing trades & history.
+
+                                 * Integrate caching with Redis/Dragonfly.
+
+DevOps Engineers
+                                    * Setup AWS EC2 (Linux + Wine).
+
+                                    * Maintain Redis/Dragonfly caching.
+
+                                    * Manage Supabase DB + backups.
+
+                                    * Configure GitHub CI/CD pipeline.
+
+                                    * Setup ngrok for execution endpoints.
+
+                                    * Security (API keys, encryption, secrets mgmt).
+
+Frontend Engineers
+                                       * Build login/signup pages.
+
+                                       * Develop Admin Dashboard (account supervision, live positions, charts, manual signals).
+
+                                       * Develop Customer Dashboard (ongoing trades, trade history, profit/loss tracking).
+
+                                       * Real-time UI updates with cached backend data.
+
+UI/UX Designers
+                                          * Create wireframes for admin/customer dashboards.
+
+                                          * Design live trade charts, positions tables, profit/loss graphs.
+
+                                          * Ensure responsive/mobile-friendly design.
+
+AI/ML Engineers
+                                             * Train AI models for:
+
+                                                * Completing incomplete signals.
+
+                                                * Optimizing TP/SL with <10% error margin.
+
+                                                * Sentiment analysis from Reddit/Twitter.
+
+                                                   * Continuous improvement of models based on trade outcomes.
+
+Bot Engineers
+                                                      * Build Telegram & WhatsApp bots.
+
+                                                      * Configure alerts for placed/closed trades.
+
+                                                      * Sync notifications with Admin & Customers.
+
+
+Ash Tech
