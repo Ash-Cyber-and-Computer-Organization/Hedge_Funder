@@ -30,6 +30,9 @@ class DataStorage:
             self.market_data = self.db.market_data
             self.intraday_data = self.db.intraday_data
             self.real_time_prices = self.db.real_time_prices
+            self.trade_signals = self.db.trade_signals
+            self.portfolio = self.db.portfolio
+            self.transactions = self.db.transactions
 
             # Create indexes for better performance
             self._create_indexes()
@@ -51,6 +54,18 @@ class DataStorage:
 
             # Real-time prices indexes
             self.real_time_prices.create_index([('ticker', 1), ('timestamp', -1)])
+
+            # Trade signals indexes
+            self.trade_signals.create_index([('ticker', 1), ('timestamp', -1)])
+            self.trade_signals.create_index([('action', 1), ('timestamp', -1)])
+
+            # Portfolio indexes
+            self.portfolio.create_index([('user_id', 1), ('ticker', 1)])
+            self.portfolio.create_index([('timestamp', -1)])
+
+            # Transactions indexes
+            self.transactions.create_index([('user_id', 1), ('timestamp', -1)])
+            self.transactions.create_index([('ticker', 1), ('timestamp', -1)])
 
             logger.info("✅ Database indexes created successfully")
 
@@ -227,6 +242,138 @@ class DataStorage:
         except Exception as e:
             logger.error(f"❌ Error cleaning up old data: {e}")
 
+    def store_trade_signal(self, ticker, action, reason, current_price, sma_20, rsi, user_id='default'):
+        """Store trade signal analysis"""
+        try:
+            doc = {
+                'ticker': ticker,
+                'action': action,
+                'reason': reason,
+                'current_price': float(current_price),
+                'sma_20': float(sma_20),
+                'rsi': float(rsi),
+                'user_id': user_id,
+                'timestamp': datetime.utcnow()
+            }
+
+            result = self.trade_signals.insert_one(doc)
+            logger.info(f"✅ Stored trade signal for {ticker}: {action}")
+            return result.inserted_id
+
+        except Exception as e:
+            logger.error(f"❌ Error storing trade signal for {ticker}: {e}")
+            return None
+
+    def store_portfolio_position(self, user_id, ticker, quantity, avg_price, current_value):
+        """Store or update portfolio position"""
+        try:
+            doc = {
+                'user_id': user_id,
+                'ticker': ticker,
+                'quantity': float(quantity),
+                'avg_price': float(avg_price),
+                'current_value': float(current_value),
+                'timestamp': datetime.utcnow()
+            }
+
+            # Upsert: update if exists, insert if not
+            result = self.portfolio.replace_one(
+                {'user_id': user_id, 'ticker': ticker},
+                doc,
+                upsert=True
+            )
+            logger.info(f"✅ Stored portfolio position for {user_id}: {ticker}")
+            return result.upserted_id or result.modified_count
+
+        except Exception as e:
+            logger.error(f"❌ Error storing portfolio position for {user_id}: {e}")
+            return None
+
+    def store_transaction(self, user_id, ticker, action, quantity, price, total_value):
+        """Store transaction record"""
+        try:
+            doc = {
+                'user_id': user_id,
+                'ticker': ticker,
+                'action': action,  # 'buy' or 'sell'
+                'quantity': float(quantity),
+                'price': float(price),
+                'total_value': float(total_value),
+                'timestamp': datetime.utcnow()
+            }
+
+            result = self.transactions.insert_one(doc)
+            logger.info(f"✅ Stored transaction for {user_id}: {action} {quantity} {ticker}")
+            return result.inserted_id
+
+        except Exception as e:
+            logger.error(f"❌ Error storing transaction for {user_id}: {e}")
+            return None
+
+    def get_trade_signals(self, user_id='default', limit=50):
+        """Get recent trade signals"""
+        try:
+            cursor = self.trade_signals.find({'user_id': user_id}).sort('timestamp', -1).limit(limit)
+            signals = list(cursor)
+            logger.info(f"✅ Retrieved {len(signals)} trade signals for {user_id}")
+            return signals
+        except Exception as e:
+            logger.error(f"❌ Error retrieving trade signals for {user_id}: {e}")
+            return []
+
+    def get_portfolio(self, user_id='default'):
+        """Get current portfolio positions"""
+        try:
+            cursor = self.portfolio.find({'user_id': user_id})
+            positions = list(cursor)
+            logger.info(f"✅ Retrieved {len(positions)} portfolio positions for {user_id}")
+            return positions
+        except Exception as e:
+            logger.error(f"❌ Error retrieving portfolio for {user_id}: {e}")
+            return []
+
+    def get_transactions(self, user_id='default', limit=100):
+        """Get transaction history"""
+        try:
+            cursor = self.transactions.find({'user_id': user_id}).sort('timestamp', -1).limit(limit)
+            transactions = list(cursor)
+            logger.info(f"✅ Retrieved {len(transactions)} transactions for {user_id}")
+            return transactions
+        except Exception as e:
+            logger.error(f"❌ Error retrieving transactions for {user_id}: {e}")
+            return []
+
+    def get_dashboard_data(self, user_id='default'):
+        """Get aggregated data for dashboard"""
+        try:
+            # Get latest signals
+            latest_signals = self.get_trade_signals(user_id, limit=10)
+
+            # Get portfolio summary
+            portfolio = self.get_portfolio(user_id)
+            total_value = sum(pos.get('current_value', 0) for pos in portfolio)
+
+            # Get recent transactions
+            recent_transactions = self.get_transactions(user_id, limit=10)
+
+            # Get database stats
+            stats = self.get_database_stats()
+
+            dashboard_data = {
+                'latest_signals': latest_signals,
+                'portfolio': portfolio,
+                'total_portfolio_value': total_value,
+                'recent_transactions': recent_transactions,
+                'database_stats': stats
+            }
+
+            logger.info(f"✅ Retrieved dashboard data for {user_id}")
+            return dashboard_data
+
+        except Exception as e:
+            logger.error(f"❌ Error getting dashboard data for {user_id}: {e}")
+            return {}
+
     def get_database_stats(self):
         """Get database statistics"""
         try:
@@ -234,9 +381,15 @@ class DataStorage:
                 'market_data_count': self.market_data.count_documents({}),
                 'intraday_data_count': self.intraday_data.count_documents({}),
                 'real_time_prices_count': self.real_time_prices.count_documents({}),
+                'trade_signals_count': self.trade_signals.count_documents({}),
+                'portfolio_count': self.portfolio.count_documents({}),
+                'transactions_count': self.transactions.count_documents({}),
                 'total_records': (self.market_data.count_documents({}) +
                                 self.intraday_data.count_documents({}) +
-                                self.real_time_prices.count_documents({}))
+                                self.real_time_prices.count_documents({}) +
+                                self.trade_signals.count_documents({}) +
+                                self.portfolio.count_documents({}) +
+                                self.transactions.count_documents({}))
             }
             logger.info(f"📊 Database stats: {stats}")
             return stats

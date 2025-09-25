@@ -3,10 +3,21 @@ import requests
 import pandas as pd
 import logging
 import os
+import sys
 from datetime import timedelta, datetime
 import random
 import numpy as np
 from functools import wraps
+
+# Add the backend directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Set default MongoDB connection if not set
+if not os.environ.get('MONGODB_URL'):
+    os.environ['MONGODB_URL'] = 'mongodb+srv://dada4ash_db_user:Jack247x@cluster0.j8emjgs.mongodb.net/'
+if not os.environ.get('MONGODB_DATABASE'):
+    os.environ['MONGODB_DATABASE'] = 'hedge_funder'
+
 from data_storage import get_data_storage
 
 logger = logging.getLogger(__name__)
@@ -365,20 +376,45 @@ def place_trade(action, ticker, quantity=1, price=None):
 def run_market_analysis(tickers=None):
     """Main function to run market analysis and place trades"""
     logger.info("Starting market analysis")
-    
+
+    # Initialize data storage
+    storage = get_data_storage()
+
     # Fetch real-time data
     prices = get_real_time_prices(tickers)
-    
+
     # Fetch historical data for analysis
     historical_data = fetch_stock_data(tickers, interval='1d')
-    
+
+    analysis_results = {}
     for ticker, data in historical_data.items():
         analysis = analyze_stock(data, ticker)
+        analysis_results[ticker] = analysis
         logger.info(f"Analysis for {ticker}: {analysis}")
-        
+
+        # Store trade signal in MongoDB as JSON
+        storage.store_trade_signal(
+            ticker=analysis['ticker'],
+            action=analysis['action'],
+            reason=analysis['reason'],
+            current_price=analysis['current_price'],
+            sma_20=analysis['sma_20'],
+            rsi=analysis['rsi']
+        )
+
         if analysis['action'] != 'hold':
             trade_result = place_trade(analysis['action'], ticker)
-    return {'prices': prices, 'analysis': {ticker: analyze_stock(data, ticker) for ticker, data in historical_data.items()}}
+            # Store transaction in MongoDB as JSON
+            storage.store_transaction(
+                user_id='default',
+                ticker=ticker,
+                action=analysis['action'],
+                quantity=1,
+                price=analysis['current_price'],
+                total_value=analysis['current_price']
+            )
+
+    return {'prices': prices, 'analysis': analysis_results}
 
 # Added function to setup logging
 def setup_logging():

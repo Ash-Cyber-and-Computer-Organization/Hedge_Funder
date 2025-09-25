@@ -3,3 +3,4 @@ pandas==2.1.4
 numpy==1.24.3
 pymongo==4.6.0
 python-dotenv==1.0.0
+flask==3.0.0

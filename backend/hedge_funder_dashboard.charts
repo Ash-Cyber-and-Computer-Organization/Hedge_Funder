@@ -1,0 +1,218 @@
+{
+  "name": "Hedge Funder Dashboard",
+  "description": "Comprehensive dashboard for hedge fund market analysis and trading signals",
+  "charts": [
+    {
+      "name": "Database Statistics",
+      "description": "Overview of data counts across all collections",
+      "type": "column",
+      "dataSource": {
+        "database": "hedge_funder",
+        "collection": "market_data"
+      },
+      "query": {
+        "pipeline": [
+          {
+            "$group": {
+              "_id": null,
+              "market_data": { "$sum": 1 },
+              "intraday_data": { "$literal": 0 },
+              "real_time_prices": { "$literal": 0 },
+              "trade_signals": { "$literal": 0 },
+              "portfolio": { "$literal": 0 },
+              "transactions": { "$literal": 0 }
+            }
+          },
+          {
+            "$lookup": {
+              "from": "intraday_data",
+              "pipeline": [{ "$count": "count" }],
+              "as": "intraday"
+            }
+          },
+          {
+            "$lookup": {
+              "from": "real_time_prices",
+              "pipeline": [{ "$count": "count" }],
+              "as": "prices"
+            }
+          },
+          {
+            "$lookup": {
+              "from": "trade_signals",
+              "pipeline": [{ "$count": "count" }],
+              "as": "signals"
+            }
+          },
+          {
+            "$lookup": {
+              "from": "portfolio",
+              "pipeline": [{ "$count": "count" }],
+              "as": "port"
+            }
+          },
+          {
+            "$lookup": {
+              "from": "transactions",
+              "pipeline": [{ "$count": "count" }],
+              "as": "trans"
+            }
+          },
+          {
+            "$project": {
+              "market_data": "$market_data",
+              "intraday_data": { "$arrayElemAt": ["$intraday.count", 0] },
+              "real_time_prices": { "$arrayElemAt": ["$prices.count", 0] },
+              "trade_signals": { "$arrayElemAt": ["$signals.count", 0] },
+              "portfolio": { "$arrayElemAt": ["$port.count", 0] },
+              "transactions": { "$arrayElemAt": ["$trans.count", 0] }
+            }
+          }
+        ]
+      },
+      "xAxis": "Collection",
+      "yAxis": "Count",
+      "fields": {
+        "market_data": "Market Data",
+        "intraday_data": "Intraday Data",
+        "real_time_prices": "Real-Time Prices",
+        "trade_signals": "Trade Signals",
+        "portfolio": "Portfolio",
+        "transactions": "Transactions"
+      }
+    },
+    {
+      "name": "Trade Signals by Action",
+      "description": "Distribution of buy/sell/hold signals",
+      "type": "pie",
+      "dataSource": {
+        "database": "hedge_funder",
+        "collection": "trade_signals"
+      },
+      "query": {
+        "pipeline": [
+          {
+            "$group": {
+              "_id": "$action",
+              "count": { "$sum": 1 }
+            }
+          }
+        ]
+      },
+      "labelField": "_id",
+      "valueField": "count"
+    },
+    {
+      "name": "Portfolio Value Over Time",
+      "description": "Portfolio value changes over time",
+      "type": "line",
+      "dataSource": {
+        "database": "hedge_funder",
+        "collection": "portfolio"
+      },
+      "query": {
+        "pipeline": [
+          {
+            "$sort": { "timestamp": 1 }
+          },
+          {
+            "$group": {
+              "_id": {
+                "$dateToString": {
+                  "format": "%Y-%m-%d",
+                  "date": "$timestamp"
+                }
+              },
+              "total_value": { "$sum": "$current_value" }
+            }
+          }
+        ]
+      },
+      "xAxis": "_id",
+      "yAxis": "total_value"
+    },
+    {
+      "name": "Recent Transactions",
+      "description": "Latest trading transactions",
+      "type": "table",
+      "dataSource": {
+        "database": "hedge_funder",
+        "collection": "transactions"
+      },
+      "query": {
+        "pipeline": [
+          {
+            "$sort": { "timestamp": -1 }
+          },
+          {
+            "$limit": 20
+          }
+        ]
+      },
+      "columns": [
+        { "field": "ticker", "label": "Ticker" },
+        { "field": "action", "label": "Action" },
+        { "field": "quantity", "label": "Quantity" },
+        { "field": "price", "label": "Price" },
+        { "field": "total_value", "label": "Total Value" },
+        { "field": "timestamp", "label": "Timestamp" }
+      ]
+    },
+    {
+      "name": "Real-Time Price Changes",
+      "description": "Current price changes for monitored stocks",
+      "type": "bar",
+      "dataSource": {
+        "database": "hedge_funder",
+        "collection": "real_time_prices"
+      },
+      "query": {
+        "pipeline": [
+          {
+            "$sort": { "timestamp": -1 }
+          },
+          {
+            "$group": {
+              "_id": "$ticker",
+              "change_percent": { "$first": "$change_percent" },
+              "current_price": { "$first": "$current_price" }
+            }
+          }
+        ]
+      },
+      "xAxis": "_id",
+      "yAxis": "change_percent"
+    },
+    {
+      "name": "Signal Timeline",
+      "description": "Trade signals over time",
+      "type": "scatter",
+      "dataSource": {
+        "database": "hedge_funder",
+        "collection": "trade_signals"
+      },
+      "query": {
+        "pipeline": [
+          {
+            "$sort": { "timestamp": 1 }
+          }
+        ]
+      },
+      "xAxis": "timestamp",
+      "yAxis": "current_price",
+      "colorField": "action"
+    }
+  ],
+  "filters": [
+    {
+      "name": "Date Range",
+      "field": "timestamp",
+      "type": "dateRange"
+    },
+    {
+      "name": "Ticker Filter",
+      "field": "ticker",
+      "type": "select"
+    }
+  ]
+}
