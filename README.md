@@ -93,7 +93,7 @@ MIT License
 ## Contact
 
 For questions, contact the maintainers via GitHub issues.
-@ ContractorX
+@ ContractorX.
 @ Moh dakai.
 
 
